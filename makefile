@@ -12,7 +12,7 @@ COMPILER_FLAGS = -Wall -O3
 LINKER_FLAGS = -lSDL2 -lSDL2_image
 
 #OBJ_NAME specifies the name of our exectuable
-OBJ_NAME = sthmup
+OBJ_NAME = shmup
 
 #This is the target that compiles our executable
 all : $(OBJS)

@@ -19,6 +19,10 @@
 #define ALIEN_BULLET_SPEED 8
 #define SIDE_PLAYER 0
 #define SIDE_ALIEN 1
+#define MAX_LINE_LENGTH 1024
+
+#define GLYPH_HEIGHT 28
+#define GLYPH_WIDTH  18
 
 static void init_player(stage *s);
 static void fire_bullet(stage *s);
@@ -27,7 +31,7 @@ static void do_player(stage *s, int *keyboard);
 static void do_bullets(stage *s);
 static void do_enemies(stage *s);
 static void do_fighters(stage *s);
-static void clip_player(stage *s);
+static void clip_player();
 static void spawn_enemies(stage *s);
 static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
 static int bullet_hit_fighter(entity *b, stage *s);
@@ -47,9 +51,13 @@ static void add_explosions(int x, int y, int num, stage *s);
 static void blit(SDL_Texture *texture, int x, int y, SDL_Renderer *r);
 static void blit_rect(SDL_Texture *texture, SDL_Rect *src, int x, int y, SDL_Renderer *r);
 static SDL_Texture *load_texture(char *filename, SDL_Renderer *r);
+static void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *format, ...);
+static void draw_hud(stage *s, SDL_Renderer *renderer);
+
 
 static SDL_Texture *player_texture;
 static SDL_Texture *bullet_texture;
+static SDL_Texture *font_texture;
 static SDL_Texture *enemy_texture;
 static SDL_Texture *alien_bullet_texture;
 static SDL_Texture *explosion_texture;
@@ -62,23 +70,27 @@ static int reset_timer;
 static int background_x;
 static star stars[MAX_STARS];
 
+static char draw_text_buffer[MAX_LINE_LENGTH];
+
 stage *init_stage(SDL_Renderer *r)
 {
-    stage *s = calloc(1, sizeof(stage));
-    s->fighter_tail = &s->fighter_head;
-    s->bullet_tail = &s->bullet_head;
+	stage *s = calloc(1, sizeof(stage));
+	s->fighter_tail = &s->fighter_head;
+	s->bullet_tail = &s->bullet_head;
+	s->score = 0;
 
-    bullet_texture = load_texture("gfx/playerBullet.png", r);
-    enemy_texture = load_texture("gfx/enemy.png", r);
+	bullet_texture = load_texture("gfx/playerBullet.png", r);
+	enemy_texture = load_texture("gfx/enemy.png", r);
 	alien_bullet_texture = load_texture("gfx/alienBullet.png", r);
 	player_texture = load_texture("gfx/player.png", r);
 	background = load_texture("gfx/background.png", r);
 	explosion_texture = load_texture("gfx/explosion.png", r);
+	font_texture = load_texture("gfx/font.png", r);
 	
 	reset_stage(s);
 
 	puts("init_stage");
-    return s;
+	return s;
 }
 
 static void reset_stage(stage *s)
@@ -113,7 +125,7 @@ static void reset_stage(stage *s)
 
 	memset(s, 0, sizeof(stage));
 	s->fighter_tail = &s->fighter_head;
-    s->bullet_tail = &s->bullet_head;
+	s->bullet_tail = &s->bullet_head;
 	s->explosion_tail = &s->explosion_head;
 	s->debris_tail = &s->debris_head;
 
@@ -122,16 +134,20 @@ static void reset_stage(stage *s)
 
 	spawn_timer = 0;
 	reset_timer = FPS * 3;
+	s->score = 0;
 
 	puts("reset_stage");
 }
 
 static void init_player(stage *s)
 {
-    player = create_entity(100, 100, SIDE_PLAYER, player_texture);
-    s->fighter_tail->next = player;
-    s->fighter_tail = player;
-    puts("player initialized");
+	player = create_entity(100, 100, SIDE_PLAYER, player_texture);
+	player->dx = 0;
+	player->dy = 0;
+	player->health = 3;
+	s->fighter_tail->next = player;
+	s->fighter_tail = player;
+	puts("player initialized");
 }
 
 static void init_starfield()
@@ -148,18 +164,18 @@ void do_logic(int *keyboard, stage *s)
 {
 	do_background();
 	do_starfield();
-    do_player(s, keyboard); puts("do player");
+	do_player(s, keyboard); puts("do player");
 	do_enemies(s); puts("do enemies");
 	do_fighters(s); puts("do fighters");
 	do_bullets(s); puts("do bullets");
 	spawn_enemies(s); puts("spawn_enemies");
-	clip_player(s); puts("clip player");
+	clip_player(); puts("clip player");
 	do_explosions(s);
 	do_debris(s);
 
 	if(player == NULL && --reset_timer <= 0)
 		reset_stage(s);
-    puts("do logic");
+	puts("do logic");
 }
 
 void draw(stage *s, SDL_Renderer *r)
@@ -180,8 +196,9 @@ void draw(stage *s, SDL_Renderer *r)
 	for (e = s->fighter_head.next; e != NULL ; e = e->next)
 		blit(e->texture, e->x, e->y, r);
 	
-    draw_debris(s, r);
+	draw_debris(s, r);
 	draw_explosions(s, r);
+	draw_hud(s, r);
 	puts("draw");
 }
 
@@ -190,8 +207,7 @@ static void draw_background(SDL_Renderer *r)
 	SDL_Rect dest;
 	int x;
 	
-	for (x = background_x ; x < SCREEN_WIDTH ; x += SCREEN_WIDTH)
-	{
+	for (x = background_x ; x < SCREEN_WIDTH ; x += SCREEN_WIDTH) {
 		dest.x = x;
 		dest.y = 0;
 		dest.w = SCREEN_WIDTH;
@@ -205,8 +221,7 @@ static void draw_starfield(SDL_Renderer *r)
 {
 	int i, c;
 	
-	for (i = 0 ; i < MAX_STARS ; i++)
-	{
+	for (i = 0 ; i < MAX_STARS ; i++) {
 		c = 32 * stars[i].speed;
 		
 		SDL_SetRenderDrawColor(r, c, c, c, 255);
@@ -220,9 +235,7 @@ static void draw_debris(stage *s, SDL_Renderer *r)
 	debris *d;
 	
 	for (d = s->debris_head.next ; d != NULL ; d = d->next)
-	{
 		blit_rect(d->texture, &d->rect, d->x, d->y, r);
-	}
 }
 
 static void draw_explosions(stage *s, SDL_Renderer *r)
@@ -232,8 +245,7 @@ static void draw_explosions(stage *s, SDL_Renderer *r)
 	SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_ADD);
 	SDL_SetTextureBlendMode(explosion_texture, SDL_BLENDMODE_ADD);
 	
-	for (ex = s->explosion_head.next ; ex != NULL ; ex = ex->next)
-	{
+	for (ex = s->explosion_head.next ; ex != NULL ; ex = ex->next) {
 		SDL_SetTextureColorMod(explosion_texture, ex->r, ex->g, ex->b);
 		SDL_SetTextureAlphaMod(explosion_texture, ex->a);
 		
@@ -287,17 +299,13 @@ static void do_debris(stage *s)
 	debris *d;
 	debris *prev = &s->debris_head;
 
-	for (d = s->debris_head.next ; d != NULL ; d = d->next)
-	{
+	for (d = s->debris_head.next ; d != NULL ; d = d->next) {
 		d->x += d->dx;
 		d->y += d->dy;
 		
-		if (--d->life <= 0)
-		{
+		if (--d->life <= 0) {
 			if (d == s->debris_tail)
-			{
 				s->debris_tail = prev;
-			}
 			
 			prev->next = d->next;
 			free(d);
@@ -325,8 +333,7 @@ static void add_explosions(int x, int y, int num, stage *s)
 		ex->dx /= 10;
 		ex->dy /= 10;
 
-		switch (rand() % 4)
-		{
+		switch (rand() % 4) {
 			case 0:
 				ex->r = 255;
 				break;
@@ -389,7 +396,7 @@ static void add_debris(entity *e, stage *s)
 
 static void do_player(stage *s, int *keyboard)
 {
-    if(player != NULL) {
+	if(player != NULL) {
 	
 		player->dx = 0;
 		player->dy = 0;
@@ -415,12 +422,12 @@ static void do_player(stage *s, int *keyboard)
 		player->x += player->dx;
 		player->y += player->dy;
 	}
-    puts("do player");
+	puts("do player");
 }
 
 static void fire_bullet(stage *s)
 {
-    entity *bullet = create_entity(player->x, player->y, SIDE_PLAYER, bullet_texture);
+	entity *bullet = create_entity(player->x, player->y, SIDE_PLAYER, bullet_texture);
 	
 	s->bullet_tail->next = bullet;
 	s->bullet_tail = bullet;
@@ -431,13 +438,13 @@ static void fire_bullet(stage *s)
 	
 	player->reload = 8;
 
-    puts("fire_bullet");
+	puts("fire_bullet");
 }
 
 static void do_enemies(stage *s)
 {
 	entity *e;
-	for(e = s->fighter_head.next; e != NULL; e = e->next){
+	for(e = s->fighter_head.next; e != NULL; e = e->next) {
 		if(e != player && player != NULL && --e->reload <= 0)
 			fire_alien_bullet(e, s);
 	}
@@ -514,7 +521,7 @@ static void spawn_enemies(stage *s)
 	puts("spawn enemies");
 }
 
-static void clip_player(stage *s)
+static void clip_player()
 {
 	entity *p = player;
 	if(p != NULL) {
@@ -538,7 +545,7 @@ static void clip_player(stage *s)
 
 static void do_bullets(stage *s)
 {
-    entity *b;
+	entity *b;
 	entity *prev = &s->bullet_head;
 		
 	for (b = s->bullet_head.next; b != NULL; b = b->next) {
@@ -555,13 +562,12 @@ static void do_bullets(stage *s)
 		}
 		prev = b;
 	}
-    
+	
 	puts("do_bullets");
 }
 
 static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 {
-
 	puts("collision");
 	return (MAX(x1, x2) < MIN(x1 + w1, x2 + w2)) && (MAX(y1, y2) < MIN(y1 + h1, y2 + h2));
 }
@@ -575,11 +581,15 @@ static int bullet_hit_fighter(entity *b, stage *s)
 
 			puts("bullet_hit_fighter");
 			b->health = 0;
-			e->health = 0;
+			e->health--;
 
-			add_explosions(e->x, e->y, 32, s);
-			add_debris(e, s);
-
+			if(e->health == 0) {
+				add_explosions(e->x, e->y, 32, s);
+				add_debris(e, s);
+				if(e != player)
+					s->score++;
+			}
+			
 			return 1;
 
 		}
@@ -632,6 +642,49 @@ static void blit_rect(SDL_Texture *texture, SDL_Rect *src, int x, int y, SDL_Ren
 
 static SDL_Texture *load_texture(char *filename, SDL_Renderer *r)
 {
-    puts("texture loaded");
+	puts("texture loaded");
 	return IMG_LoadTexture(r, filename);
+}
+
+static void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *format, ...)
+{
+	int i, len, c;
+	SDL_Rect rect;
+	va_list args;
+
+	memset(&draw_text_buffer, '\0', sizeof(draw_text_buffer));
+
+	va_start(args, format);
+	vsprintf(draw_text_buffer, format, args);
+	va_end(args);
+
+	len = strlen(draw_text_buffer);
+
+	rect.w = GLYPH_WIDTH;
+	rect.h = GLYPH_HEIGHT;
+	rect.y = 0;
+
+	SDL_SetTextureColorMod(font_texture, r, g, b);
+
+	for (i = 0 ; i < len ; i++) {
+		c = draw_text_buffer[i];
+
+		if (c >= ' ' && c <= 'Z') {
+			rect.x = (c - ' ') * GLYPH_WIDTH;
+			blit_rect(font_texture, &rect, x, y, renderer);
+			//blit_rect(d->texture, &d->rect, d->x, d->y, r);
+			x += GLYPH_WIDTH;
+		}
+	}
+}
+
+static void draw_hud(stage *s, SDL_Renderer *renderer)
+{
+	draw_text(1080, 10, 255, 255, 255, renderer, "SCORE: %03d", s->score);
+	if(player != NULL) {
+		draw_text(1080, 50, 255, 255, 255, renderer, "HEALTH: %d", player->health);
+	} else {
+		draw_text(1080, 50, 255, 255, 255, renderer, "HEALTH: %d", 0);
+		draw_text(400, 400, 255, 255, 255, renderer, "YOU GOT DESTROYED!");
+	}
 }

@@ -11,7 +11,8 @@ typedef struct stage {
     entity bullet_head, *bullet_tail;
 
     explosion explosion_head, *explosion_tail;
-    debris debris_head, *debris_tail;    
+    debris debris_head, *debris_tail;
+    int score;
 } stage;
 
 stage *init_stage(SDL_Renderer *renderer);
