@@ -1,19 +1,23 @@
-#OBJS specifies which files to compile as part of the project
-OBJS = main.c game.c entity.c stage.c
-
-#CC specifies which compiler we're using
 CC = gcc
-
-#COMPILER_FLAGS specifies the additional compilation options we're using
-# -w suppresses all warnings
-COMPILER_FLAGS = -Wall -O3
-
-#LINKER_FLAGS specifies the libraries we're linking against
+CFLAGS = -Wall -Wextra -g -O0
+SRC=src
+OBJ=obj
+SRCS=$(wildcard $(SRC)/*.c)
+OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 LINKER_FLAGS = -lSDL2 -lSDL2_image
+BIN = bin/shtmup
 
-#OBJ_NAME specifies the name of our exectuable
-OBJ_NAME = shmup
+all:$(BIN)
 
-#This is the target that compiles our executable
-all : $(OBJS)
-	$(CC) $(OBJS) $(COMPILER_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+release: CFLAGS=-Wall -O3 -DNDEBUG
+release: clean
+release: $(BIN)
+
+$(BIN): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) $(LINKER_FLAGS) -o $@
+
+$(OBJ)/%.o: $(SRC)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -rf bin/* obj/*
