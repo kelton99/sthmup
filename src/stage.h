@@ -5,6 +5,9 @@
 #include "entity.h"
 #include "explosion.h"
 #include "debris.h"
+#include "star.h"
+
+#define MAX_STARS 500
 
 typedef struct stage {
     entity fighter_head, *fighter_tail;
@@ -12,6 +15,7 @@ typedef struct stage {
 
     explosion explosion_head, *explosion_tail;
     debris debris_head, *debris_tail;
+    star stars[MAX_STARS];
     int score;
 } stage;
 

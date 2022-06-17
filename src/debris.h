@@ -1,5 +1,6 @@
 #ifndef __DEBRIS__
 #define __DEBRIS__
+
 #include <SDL2/SDL.h>
 
 typedef struct debris debris;

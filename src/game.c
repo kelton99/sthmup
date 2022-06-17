@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <string.h>
 
 #include "game.h"
 #include "entity.h"
@@ -24,8 +25,8 @@ game *init_game()
 	}
 
 	game *g = malloc(sizeof(game));
-	
 	g->is_running = 1;
+	memset(g->keyboard, 0, sizeof g->keyboard);
 	g->window = SDL_CreateWindow("Shooter 01", 0, 0, 1280, 720, 0);
 	g->renderer = SDL_CreateRenderer(g->window, -1, SDL_RENDERER_ACCELERATED);
 	g->s = init_stage(g->renderer);

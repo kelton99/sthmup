@@ -1,3 +1,6 @@
+#ifndef __STAR__
+#define __STAR__
+
 typedef struct star star;
 
 struct star {
@@ -5,3 +8,5 @@ struct star {
     int y;
     int speed;
 };
+
+#endif
