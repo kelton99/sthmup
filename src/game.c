@@ -1,16 +1,14 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "game.h"
-#include "entity.h"
 #include "stage.h"
 #include "channels.h"
 #include "sounds.h"
 
-#define PLAYER_SPEED 4
-#define PLAYER_BULLET_SPEED 16
 #define CODE event->keysym.scancode
 
 static void doKeyDown(SDL_KeyboardEvent *event, game *g);

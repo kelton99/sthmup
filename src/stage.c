@@ -1,40 +1,28 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "GLOBALS.h"
 #include "stage.h"
 #include "entity.h"
+#include "entity_manager.h"
 #include "star.h"
 #include "explosion.h"
 #include "debris.h"
 #include "drawer.h"
-#include "GLOBALS.h"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 #define FPS 60
-#define PLAYER_SPEED 4
-#define PLAYER_BULLET_SPEED 16
-#define ALIEN_BULLET_SPEED 8
 #define SIDE_PLAYER 0
-#define SIDE_ALIEN 1
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
-static void init_player(stage *s);
-static void fire_bullet(stage *s);
-static void fire_alien_bullet(entity *e, stage *s);
-static void do_player(stage *s, int *keyboard);
-static void do_bullets(stage *s);
-static void do_enemies(stage *s);
-static void do_fighters(stage *s);
-static void clip_player();
-static void spawn_enemies(stage *s);
 static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
+static void do_bullets(entity_manager *em, stage *s);
 static int bullet_hit_fighter(entity *b, stage *s);
-static void calc_slope(int x1, int y1, int x2, int y2, float *dx, float *dy);
 static void reset_stage(stage *s);
-static void init_starfield();
+static void init_starfield(stage *s);
 static void do_background();
 static void do_starfield(stage *s);
 static void do_explosions(stage *s);
@@ -42,10 +30,7 @@ static void do_explosions(stage *s);
 static void add_debris(entity *e, stage *s);
 static void add_explosions(int x, int y, int num, stage *s);
 
-static entity *player;
 
-static int spawn_timer;
-static int reset_timer;
 
 //DEFINING GLOBAL from GLOBALS.H
 int background_x;
@@ -57,8 +42,9 @@ void do_debris(stage *s);
 stage *init_stage(SDL_Renderer *r)
 {
 	stage *s = calloc(1, sizeof(stage));
-	s->fighter_tail = &s->fighter_head;
-	s->bullet_tail = &s->bullet_head;
+	s->em = init_entity_manager();
+	s->spawn_timer = 0;
+	s->reset_timer = FPS * 3;
 	s->score = 0;
 
 	init_draw(r);
@@ -70,21 +56,11 @@ stage *init_stage(SDL_Renderer *r)
 
 static void reset_stage(stage *s)
 {
-	entity *e;
+
 	explosion *ex;
 	debris *d;
 
-	while(s->fighter_head.next) {
-		e = s->fighter_head.next;
-		s->fighter_head.next = e->next;
-		free(e);
-	}
-
-	while (s->bullet_head.next) {
-		e = s->bullet_head.next;
-		s->bullet_head.next = e->next;
-		free(e);
-	}
+	em_clean_entities(s->em);
 
 	while (s->explosion_head.next) {
 		ex = s->explosion_head.next;
@@ -98,29 +74,20 @@ static void reset_stage(stage *s)
 		free(d);
 	}
 
-	memset(s, 0, sizeof(stage));
-	s->fighter_tail = &s->fighter_head;
-	s->bullet_tail = &s->bullet_head;
+	
+	s->em->fighter_tail = &s->em->fighter_head;
+	s->em->bullet_tail = &s->em->bullet_head;
 	s->explosion_tail = &s->explosion_head;
 	s->debris_tail = &s->debris_head;
 
-	init_player(s);
+	em_init_player(s->em);
 	init_starfield(s);
 
-	spawn_timer = 0;
-	reset_timer = FPS * 3;
+	s->spawn_timer = 0;
+	s->reset_timer = FPS * 3;
 	s->score = 0;
 }
 
-static void init_player(stage *s)
-{
-	player = create_entity(100, 100, SIDE_PLAYER, player_texture);
-	player->dx = 0;
-	player->dy = 0;
-	player->health = 3;
-	s->fighter_tail->next = player;
-	s->fighter_tail = player;
-}
 
 static void init_starfield(stage *s)
 {
@@ -136,16 +103,16 @@ void do_logic(int *keyboard, stage *s)
 {
 	do_background();
 	do_starfield(s);
-	do_player(s, keyboard);
-	do_enemies(s);
-	do_fighters(s);
-	do_bullets(s);
-	spawn_enemies(s);
-	clip_player();
+	em_do_player(s->em, keyboard);
+	em_do_enemies(s->em);
+	em_do_fighters(s->em);
+	do_bullets(s->em, s);
+	em_spawn_enemies(s->em, &s->spawn_timer);
+	em_clip_player(s->em);
 	do_explosions(s);
 	do_debris(s);
 
-	if(player == NULL && --reset_timer <= 0)
+	if(s->em->player == NULL && --s->reset_timer <= 0)
 		reset_stage(s);
 }
 
@@ -263,152 +230,23 @@ static void add_debris(entity *e, stage *s)
 	}
 }
 
-static void do_player(stage *s, int *keyboard)
+static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 {
-	if(player != NULL) {
-	
-		player->dx = 0;
-		player->dy = 0;
-		
-		if (player->reload > 0)
-			player->reload--;
-		
-		if (keyboard[SDL_SCANCODE_UP])
-			player->dy = -PLAYER_SPEED;
-		
-		if (keyboard[SDL_SCANCODE_DOWN])
-			player->dy = PLAYER_SPEED;
-		
-		if (keyboard[SDL_SCANCODE_LEFT])
-			player->dx = -PLAYER_SPEED;
-		
-		if (keyboard[SDL_SCANCODE_RIGHT])
-			player->dx = PLAYER_SPEED;
-		
-		if (keyboard[SDL_SCANCODE_RCTRL] && player->reload <= 0)
-			fire_bullet(s);
-		
-		player->x += player->dx;
-		player->y += player->dy;
-	}
+	return (MAX(x1, x2) < MIN(x1 + w1, x2 + w2)) && (MAX(y1, y2) < MIN(y1 + h1, y2 + h2));
 }
 
-static void fire_bullet(stage *s)
-{
-	entity *bullet = create_entity(player->x, player->y, SIDE_PLAYER, bullet_texture);
-	
-	s->bullet_tail->next = bullet;
-	s->bullet_tail = bullet;
-	
-	bullet->dx = PLAYER_BULLET_SPEED;
-	
-	bullet->y += (player->h / 2) - (bullet->h / 2);
-	
-	player->reload = 8;
-}
-
-static void do_enemies(stage *s)
-{
-	entity *e;
-	for(e = s->fighter_head.next; e != NULL; e = e->next) {
-		if(e != player && player != NULL && --e->reload <= 0)
-			fire_alien_bullet(e, s);
-	}
-}
-
-static void fire_alien_bullet(entity *e, stage *s)
-{
-	entity *bullet = create_entity(e->x, e->y, e->side, alien_bullet_texture);
-	s->bullet_tail->next = bullet;
-	s->bullet_tail = bullet;
-
-	bullet->x += (e->w / 2) - (bullet->w / 2);
-	bullet->y += (e->h / 2) - (bullet->h / 2);
-
-	calc_slope(player->x + (player->w / 2), player->y + (player->h / 2), e->x, e->y, &bullet->dx, &bullet->dy);
-
-	bullet->dx *= ALIEN_BULLET_SPEED;
-	bullet->dy *= ALIEN_BULLET_SPEED;
-
-	bullet->side = SIDE_ALIEN;
-
-	e->reload = (rand() % FPS * 2);
-}
-
-static void do_fighters(stage *s)
-{
-	entity *e;
-	entity *prev = &s->fighter_head;
-
-	for (e = s->fighter_head.next; e != NULL ; e = e->next) {
-		
-		e->x += e->dx;
-		e->y += e->dy;
-		
-		if(e != player && e->x < -e->w)
-			e->health = 0;
-		
-		if(e->health == 0) {
-
-			if (e == player)
-				player = NULL;
-			
-			if(e == s->fighter_tail)
-				s->fighter_tail = prev;
-			
-			prev->next = e->next;
-			free(e);
-			e = prev;
-		}
-		prev = e;
-	}
-}
-
-static void spawn_enemies(stage *s)
-{
-	entity *enemy;
-	
-	if (--spawn_timer <= 0) {
-		enemy = create_entity(SCREEN_WIDTH, rand() % SCREEN_HEIGHT, SIDE_ALIEN, enemy_texture);
-		enemy->dx = -(2 + (rand() % 4));
-		enemy->reload = FPS * (1 + (rand() % 3));
-		spawn_timer = 30 + (rand() % FPS);
-		
-		s->fighter_tail->next = enemy;
-		s->fighter_tail = enemy;
-	}
-}
-
-static void clip_player()
-{
-	entity *p = player;
-	if(p != NULL) {
-		if(p->x < 0)
-			p->x = 0;
-
-		if(p->y < 0)
-			p->y = 0;
-
-		if(p->x > SCREEN_WIDTH / 2)
-			p->x = SCREEN_WIDTH / 2;
-
-		if(p->y > SCREEN_HEIGHT - p->h)
-			p->y = SCREEN_HEIGHT - p->h;
-	}
-}
-
-static void do_bullets(stage *s)
+static void do_bullets(entity_manager *em, stage *s)
 {
 	entity *b;
-	entity *prev = &s->bullet_head;
+	entity *prev = &em->bullet_head;
 		
-	for (b = s->bullet_head.next; b != NULL; b = b->next) {
+	for (b = em->bullet_head.next; b != NULL; b = b->next) {
 		b->x += b->dx;
 		b->y += b->dy;
 		
 		if (bullet_hit_fighter(b, s) || b->x < -b->w || b->y < -b->h || b->x > SCREEN_WIDTH || b->y > SCREEN_HEIGHT) {
-			if (b == s->bullet_tail)
-				s->bullet_tail = prev;
+			if (b == em->bullet_tail)
+				em->bullet_tail = prev;
 			
 			prev->next = b->next;
 			free(b);
@@ -418,16 +256,11 @@ static void do_bullets(stage *s)
 	}
 }
 
-static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
-{
-	return (MAX(x1, x2) < MIN(x1 + w1, x2 + w2)) && (MAX(y1, y2) < MIN(y1 + h1, y2 + h2));
-}
-
 static int bullet_hit_fighter(entity *b, stage *s)
 {
 	entity *e;
 
-	for(e = s->fighter_head.next; e != NULL; e = e->next) {
+	for(e = s->em->fighter_head.next; e != NULL; e = e->next) {
 		if(e->side != b->side && collision(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h)) {
 			b->health = 0;
 			e->health--;
@@ -435,7 +268,7 @@ static int bullet_hit_fighter(entity *b, stage *s)
 			if(e->health == 0) {
 				add_explosions(e->x, e->y, 32, s);
 				add_debris(e, s);
-				if(e != player)
+				if(e != s->em->player)
 					s->score++;
 			}
 			
@@ -444,22 +277,6 @@ static int bullet_hit_fighter(entity *b, stage *s)
 		}
 	}
 	return 0;
-}
-
-void calc_slope(int x1, int y1, int x2, int y2, float *dx, float *dy)
-{
-	int steps = MAX(abs(x1 - x2), abs(y1 - y2));
-
-	if (steps == 0) {
-		*dx = *dy = 0;
-		return;
-	}
-
-	*dx = (x1 - x2);
-	*dx /= steps;
-
-	*dy = (y1 - y2);
-	*dy /= steps;
 }
 
 void do_debris(stage *s) {
@@ -486,18 +303,18 @@ void draw(stage *s, SDL_Renderer *r)
 {
 	draw_background(r);
 	draw_starfield(s, r);
-
+	entity *player = s->em->player;
 	if(player != NULL)
 		blit(player->texture, player->x, player->y, r);
 	
 	entity *b;
 	
-	for (b = s->bullet_head.next; b != NULL; b = b->next)
+	for (b = s->em->bullet_head.next; b != NULL; b = b->next)
 		blit(b->texture, b->x, b->y, r);
 
 	entity *e;
 	
-	for (e = s->fighter_head.next; e != NULL ; e = e->next)
+	for (e = s->em->fighter_head.next; e != NULL ; e = e->next)
 		blit(e->texture, e->x, e->y, r);
 	
 	draw_debris(s, r);
