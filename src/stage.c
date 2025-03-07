@@ -18,7 +18,7 @@
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
-static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2);
+static int collision(entity *bullet, entity *fighter);
 static void do_bullets(entity_manager *em, stage *s);
 static int bullet_hit_fighter(entity *b, stage *s);
 static void reset_stage(stage *s);
@@ -97,42 +97,42 @@ void do_logic(int *keyboard, stage *s)
 	do_explosions(s);
 	do_debris(s);
 
-	if(s->em->player == NULL && --s->reset_timer <= 0)
+	if(s->em->player == NULL && --s->reset_timer <= 0) {
 		reset_stage(s);
+	}
 }
 
 
 static void do_background()
 {
-	if(--background_x < -SCREEN_WIDTH)
+	if(--background_x < -SCREEN_WIDTH) {
 		background_x = 0;
+	}
 }
 
 static void do_starfield(stage *s)
 {
-	int i;
-
-	for(i = 0; i < MAX_STARS; i++) {
+	for(int i = 0; i < MAX_STARS; i++) {
 		s->stars[i].x -= s->stars[i].speed;
 
-		if(s->stars[i].x < 0)
+		if(s->stars[i].x < 0) {
 			s->stars[i].x += SCREEN_WIDTH;
+		}
 	}
 }
 
 static void do_explosions(stage *s)
 {
-	explosion *e;
 	explosion *prev = &s->explosion_head;
 
-	for(e = s->explosion_head.next; e != NULL; e = e->next) {
+	for(explosion *e = s->explosion_head.next; e != NULL; e = e->next) {
 		e->x += e->dx;
 		e->y += e->dy;
 
 		if(--e->a <= 0) {
-			if(e == s->explosion_tail)
+			if(e == s->explosion_tail) {
 				s->explosion_tail = prev;
-
+			}
 			prev->next = e->next;
 			free(e);
 			e = prev;
@@ -143,10 +143,8 @@ static void do_explosions(stage *s)
 
 static void add_explosions(int x, int y, int num, stage *s)
 {
-	explosion *ex;
-	int i;
-	for(i = 0; i < num; i++) {
-		ex = calloc(1, sizeof(explosion));
+	for(int i = 0; i < num; i++) {
+		explosion *ex = calloc(1, sizeof(explosion));
 		s->explosion_tail->next = ex;
 		s->explosion_tail = ex;
 
@@ -194,10 +192,11 @@ static void add_debris(entity *e, stage *s)
 			d->x = e->x + e->w / 2;
 			d->y = e->y + e->h / 2;
 
-			if(e->side == SIDE_PLAYER) 
+			if(e->side == SIDE_PLAYER) {
 				d->dx = (rand() % 9);
-			else
+			} else {
 				d->dx = -(rand() % 9);
+			}
 
 			d->dy = rand() % 3 + (-2) + 1;
 
@@ -212,24 +211,22 @@ static void add_debris(entity *e, stage *s)
 	}
 }
 
-static int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
+static int collision(entity *bullet, entity *fighter)
 {
-	return (MAX(x1, x2) < MIN(x1 + w1, x2 + w2)) && (MAX(y1, y2) < MIN(y1 + h1, y2 + h2));
+	return MAX(bullet->x, fighter->x) < MIN(bullet->x + bullet->w, fighter->x + fighter->w) && 
+	MAX(bullet->y, fighter->y) < MIN(bullet->y + bullet->h, fighter->y + fighter->h);
 }
 
 static void do_bullets(entity_manager *em, stage *s)
 {
-	entity *b;
 	entity *prev = &em->bullet_head;
-		
-	for (b = em->bullet_head.next; b != NULL; b = b->next) {
+	for (entity *b = em->bullet_head.next; b != NULL; b = b->next) {
 		b->x += b->dx;
 		b->y += b->dy;
-		
 		if (bullet_hit_fighter(b, s) || b->x < -b->w || b->y < -b->h || b->x > SCREEN_WIDTH || b->y > SCREEN_HEIGHT) {
-			if (b == em->bullet_tail)
+			if (b == em->bullet_tail) {
 				em->bullet_tail = prev;
-			
+			}
 			prev->next = b->next;
 			free(b);
 			b = prev;
@@ -240,39 +237,36 @@ static void do_bullets(entity_manager *em, stage *s)
 
 static int bullet_hit_fighter(entity *b, stage *s)
 {
-	entity *e;
-
-	for(e = s->em->fighter_head.next; e != NULL; e = e->next) {
-		if(e->side != b->side && collision(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h)) {
+	for(entity *e = s->em->fighter_head.next; e != NULL; e = e->next) {
+		if(e->side != b->side && collision(b, e)) {
 			b->health = 0;
 			e->health--;
 
 			if(e->health == 0) {
 				add_explosions(e->x, e->y, 32, s);
 				add_debris(e, s);
-				if(e != s->em->player)
+				if(e != s->em->player) {
 					s->score++;
+				}
 			}
-			
 			return 1;
-
 		}
 	}
 	return 0;
 }
 
 void do_debris(stage *s) {
-	debris *d;
+
 	debris *prev = &s->debris_head;
 
-	for (d = s->debris_head.next ; d != NULL ; d = d->next) {
+	for (debris *d = s->debris_head.next ; d != NULL ; d = d->next) {
 		d->x += d->dx;
 		d->y += d->dy;
 		
 		if (--d->life <= 0) {
-			if (d == s->debris_tail)
+			if (d == s->debris_tail) {
 				s->debris_tail = prev;
-			
+			}
 			prev->next = d->next;
 			free(d);
 			d = prev;
@@ -286,19 +280,18 @@ void draw(stage *s, SDL_Renderer *r)
 	draw_background(r);
 	draw_starfield(s, r);
 	entity *player = s->em->player;
-	if(player != NULL)
+	if(player != NULL) {
 		blit(player->texture, player->x, player->y, r);
+	}
 	
-	entity *b;
-	
-	for (b = s->em->bullet_head.next; b != NULL; b = b->next)
+	for (entity *b = s->em->bullet_head.next; b != NULL; b = b->next) {
 		blit(b->texture, b->x, b->y, r);
+	}
 
-	entity *e;
-	
-	for (e = s->em->fighter_head.next; e != NULL ; e = e->next)
+	for (entity *e = s->em->fighter_head.next; e != NULL ; e = e->next) {
 		blit(e->texture, e->x, e->y, r);
-	
+	}
+
 	draw_debris(s, r);
 	draw_explosions(s, r);
 	draw_hud(s, player, r);
@@ -322,10 +315,6 @@ static void clean_fx(stage *s)
 void cleanup_stage(stage *s)
 {
 	em_clean_entities(s->em);
-
 	free(s->em);
-
 	free(s);
-
-	
 }
