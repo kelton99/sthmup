@@ -23,4 +23,5 @@ typedef struct stage {
 stage *init_stage(SDL_Renderer *renderer);
 void do_logic(int *keyboard, stage *s);
 void draw(stage *s, SDL_Renderer *r);
+void cleanup_stage(stage *s);
 #endif

@@ -34,20 +34,17 @@ entity_manager *init_entity_manager()
 
 void em_clean_entities(entity_manager *em)
 {
-    entity *e;
-    
     while(em->fighter_head.next) {
-		e = em->fighter_head.next;
+		entity *e = em->fighter_head.next;
 		em->fighter_head.next = e->next;
 		free(e);
 	}
 
 	while (em->bullet_head.next) {
-		e = em->bullet_head.next;
+		entity *e = em->bullet_head.next;
 		em->bullet_head.next = e->next;
 		free(e);
 	}
-
 
 }
 

@@ -29,7 +29,7 @@ static void do_explosions(stage *s);
 
 static void add_debris(entity *e, stage *s);
 static void add_explosions(int x, int y, int num, stage *s);
-
+static void clean_fx(stage *s);
 
 
 //DEFINING GLOBAL from GLOBALS.H
@@ -56,25 +56,10 @@ stage *init_stage(SDL_Renderer *r)
 
 static void reset_stage(stage *s)
 {
-
-	explosion *ex;
-	debris *d;
-
 	em_clean_entities(s->em);
 
-	while (s->explosion_head.next) {
-		ex = s->explosion_head.next;
-		s->explosion_head.next = ex->next;
-		free(ex);
-	}
-
-	while(s->debris_head.next) {
-		d = s->debris_head.next;
-		s->debris_head.next = d->next;
-		free(d);
-	}
-
-	
+	clean_fx(s);
+		
 	s->em->fighter_tail = &s->em->fighter_head;
 	s->em->bullet_tail = &s->em->bullet_head;
 	s->explosion_tail = &s->explosion_head;
@@ -197,15 +182,12 @@ static void add_explosions(int x, int y, int num, stage *s)
 
 static void add_debris(entity *e, stage *s)
 {
-	debris *d;
-	int x, y, w, h;
+	int w = e->w / 2;
+	int h = e->h / 2;
 
-	w = e->w / 2;
-	h = e->h / 2;
-
-	for(y = 0; y <= h; y += h) {
-		for(x = 0; x <= w; x += w) {
-			d = calloc(1, sizeof(debris));
+	for(int y = 0; y <= h; y += h) {
+		for(int x = 0; x <= w; x += w) {
+			debris *d = calloc(1, sizeof(debris));
 			s->debris_tail->next = d;
 			s->debris_tail = d;
 			
@@ -320,4 +302,30 @@ void draw(stage *s, SDL_Renderer *r)
 	draw_debris(s, r);
 	draw_explosions(s, r);
 	draw_hud(s, player, r);
+}
+
+static void clean_fx(stage *s)
+{
+	while (s->explosion_head.next) {
+		explosion *ex = s->explosion_head.next;
+		s->explosion_head.next = ex->next;
+		free(ex);
+	}
+
+	while(s->debris_head.next) {
+		debris *d = s->debris_head.next;
+		s->debris_head.next = d->next;
+		free(d);
+	}
+}
+
+void cleanup_stage(stage *s)
+{
+	em_clean_entities(s->em);
+
+	free(s->em);
+
+	free(s);
+
+	
 }

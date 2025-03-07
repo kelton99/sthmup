@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_scancode.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -59,6 +60,9 @@ void handle_input(game *g)
 
 void update(game *g)
 {
+	if(g->keyboard[SDL_SCANCODE_Q]) {
+		g->is_running = 0;
+	}
 	do_logic(g->keyboard, g->s);
 }
 
@@ -71,9 +75,13 @@ void render(game *g)
 
 void cleanup(game *g)
 {
+	cleanup_stage(g->s);
+
 	SDL_DestroyRenderer(g->renderer);
 	
 	SDL_DestroyWindow(g->window);
+
+	free(g);
 	
 	SDL_Quit();
 }

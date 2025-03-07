@@ -22,13 +22,13 @@ SDL_Texture *background;
 
 void init_draw(SDL_Renderer *r)
 {
-	bullet_texture = load_texture("gfx/playerBullet.png", r);
-	enemy_texture = load_texture("gfx/enemy.png", r);
-	alien_bullet_texture = load_texture("gfx/alienBullet.png", r);
-	player_texture = load_texture("gfx/player.png", r);
-	background = load_texture("gfx/background.png", r);
-	explosion_texture = load_texture("gfx/explosion.png", r);
-	font_texture = load_texture("gfx/font.png", r);
+	bullet_texture = IMG_LoadTexture(r, "gfx/playerBullet.png");
+	enemy_texture = IMG_LoadTexture(r, "gfx/enemy.png");
+	alien_bullet_texture = IMG_LoadTexture(r, "gfx/alienBullet.png");
+	player_texture = IMG_LoadTexture(r, "gfx/player.png");
+	background = IMG_LoadTexture(r, "gfx/background.png");
+	explosion_texture = IMG_LoadTexture(r, "gfx/explosion.png");
+	font_texture = IMG_LoadTexture(r, "gfx/font.png");
 }
 
 void draw_explosions(stage *s, SDL_Renderer *r)
@@ -147,10 +147,4 @@ void blit_rect(SDL_Texture *texture, SDL_Rect *src, int x, int y, SDL_Renderer *
 	dest.h = src->h;
 	
 	SDL_RenderCopy(r, texture, src, &dest);
-}
-
-
-SDL_Texture *load_texture(char *filename, SDL_Renderer *r)
-{
-	return IMG_LoadTexture(r, filename);
 }

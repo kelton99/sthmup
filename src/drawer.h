@@ -25,6 +25,4 @@ void blit(SDL_Texture *texture, int x, int y, SDL_Renderer *r);
 
 void blit_rect(SDL_Texture *texture, SDL_Rect *src, int x, int y, SDL_Renderer *r);
 
-SDL_Texture *load_texture(char *filename, SDL_Renderer *r);
-
 #endif
