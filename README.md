@@ -18,7 +18,7 @@ $ sudo pacman -S base-devel make sdl2 sdl2_image sdl2_gfx sdl2_mixer sdl2_ttf
 
 Clone the repository, enter it and run the compilation command 
 ```bash
-$ git clone git@github.com:kelton99/sthmup.git
+$ git clone https://github.com/kelton99/sthmup.git
 $ cd sthmup
 ```
 For debug build
@@ -44,4 +44,5 @@ make run
 ## How to Play
 
 <p>Arrows Keys - Move</p>
-<p>LCTRL - Shoot<p>
+<p>Z - Shoot<p>
+<p>Q - Quit<p>

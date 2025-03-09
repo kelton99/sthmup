@@ -315,6 +315,7 @@ static void clean_fx(stage *s)
 void cleanup_stage(stage *s)
 {
 	em_clean_entities(s->em);
+	clean_fx(s);
 	free(s->em);
 	free(s);
 }

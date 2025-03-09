@@ -1,5 +1,6 @@
 #include "entity_manager.h"
 #include "GLOBALS.h"
+#include <SDL2/SDL_scancode.h>
 
 #define SIDE_PLAYER 0
 #define SIDE_ALIEN 1
@@ -68,25 +69,31 @@ void em_do_player(entity_manager *em, int *keyboard)
 	
 		em->player->dx = 0;
 		em->player->dy = 0;
-		
-		if (em->player->reload > 0)
+
+		if (em->player->reload > 0) {
 			em->player->reload--;
-		
-		if (keyboard[SDL_SCANCODE_UP])
+		}
+
+		if (keyboard[SDL_SCANCODE_UP]) {
 			em->player->dy = -PLAYER_SPEED;
-		
-		if (keyboard[SDL_SCANCODE_DOWN])
+		}
+
+		if (keyboard[SDL_SCANCODE_DOWN]) {
 			em->player->dy = PLAYER_SPEED;
-		
-		if (keyboard[SDL_SCANCODE_LEFT])
+		}
+
+		if (keyboard[SDL_SCANCODE_LEFT]) {
 			em->player->dx = -PLAYER_SPEED;
-		
-		if (keyboard[SDL_SCANCODE_RIGHT])
+		}
+
+		if (keyboard[SDL_SCANCODE_RIGHT]) {
 			em->player->dx = PLAYER_SPEED;
-		
-		if (keyboard[SDL_SCANCODE_RCTRL] && em->player->reload <= 0)
+		}
+
+		if (keyboard[SDL_SCANCODE_Z] && em->player->reload <= 0) {
 			em_fire_bullet(em);
-		
+		}
+
 		em->player->x += em->player->dx;
 		em->player->y += em->player->dy;
 	}

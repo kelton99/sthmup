@@ -9,7 +9,7 @@ BIN = bin/shtmup
 
 all:$(BIN)
 
-release: CFLAGS=-Wall -O3 -DNDEBUG
+release: CFLAGS=-Wall -O2 -DNDEBUG
 release: clean
 release: $(BIN)
 
