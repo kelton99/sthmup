@@ -3,15 +3,16 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include "gfx_manager.h"
 #include "stage.h"
 
 //void draw(stage *s, SDL_Renderer *r, entity *player);
 
 void init_draw(SDL_Renderer *r);
 
-void draw_explosions(stage *s, SDL_Renderer *r);
+void draw_explosions(gfx_manager *gm, SDL_Renderer *r);
 
-void draw_debris(stage *s, SDL_Renderer *r);
+void draw_debris(gfx_manager *gm, SDL_Renderer *r);
 
 void draw_background(SDL_Renderer *r);
 

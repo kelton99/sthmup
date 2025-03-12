@@ -1,6 +1,7 @@
 #ifndef __DEBRIS__
 #define __DEBRIS__
 
+#include "entity.h"
 #include <SDL2/SDL.h>
 
 typedef struct debris debris;
@@ -15,5 +16,7 @@ struct debris {
     int life;
     debris *next;
 };
+
+debris *create_debris(entity *e);
 
 #endif

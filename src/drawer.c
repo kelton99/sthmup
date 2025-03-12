@@ -1,5 +1,6 @@
 #include "drawer.h"
 #include "GLOBALS.h"
+#include "gfx_manager.h"
 
 #define MAX_LINE_LENGTH 1024
 #define GLYPH_HEIGHT 28
@@ -31,29 +32,24 @@ void init_draw(SDL_Renderer *r)
 	font_texture = IMG_LoadTexture(r, "gfx/font.png");
 }
 
-void draw_explosions(stage *s, SDL_Renderer *r)
+void draw_explosions(gfx_manager *gm, SDL_Renderer *r)
 {
-	explosion *ex;
-
 	SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_ADD);
 	SDL_SetTextureBlendMode(explosion_texture, SDL_BLENDMODE_ADD);
 	
-	for (ex = s->explosion_head.next ; ex != NULL ; ex = ex->next) {
+	for (explosion *ex = gm->explosion_head.next ; ex != NULL ; ex = ex->next) {
 		SDL_SetTextureColorMod(explosion_texture, ex->r, ex->g, ex->b);
 		SDL_SetTextureAlphaMod(explosion_texture, ex->a);
-		
 		blit(explosion_texture, ex->x, ex->y, r);
 	}
-	
 	SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
 }
 
-void draw_debris(stage *s, SDL_Renderer *r)
+void draw_debris(gfx_manager *gm, SDL_Renderer *r)
 {
-	debris *d;
-
-	for (d = s->debris_head.next ; d != NULL ; d = d->next)
+	for (debris *d = gm->debris_head.next ; d != NULL ; d = d->next) {
 		blit_rect(d->texture, &d->rect, d->x, d->y, r);
+	}
 }
 
 void draw_background(SDL_Renderer *r)

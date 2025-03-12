@@ -5,6 +5,7 @@
 #include "entity.h"
 #include "explosion.h"
 #include "debris.h"
+#include "gfx_manager.h"
 #include "star.h"
 #include "entity_manager.h"
 
@@ -12,8 +13,9 @@
 
 typedef struct stage {
     entity_manager *em;
-    explosion explosion_head, *explosion_tail;
-    debris debris_head, *debris_tail;
+    gfx_manager *gm;
+    // explosion explosion_head, *explosion_tail;
+    // debris debris_head, *debris_tail;
     star stars[MAX_STARS];
     int score;
     int spawn_timer;
