@@ -2,14 +2,13 @@
 #define __ENTITY__
 
 #include <SDL2/SDL.h>
+#include "vec2d.h"
 
 typedef struct entity entity;
 
 struct entity {
-    float x;
-    float y;
-    float dx;
-	float dy;
+    vec2d position;
+    vec2d velocity;
     int h;
     int w;
 	int health;

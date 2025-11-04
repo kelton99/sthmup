@@ -9,6 +9,7 @@
 #include "star.h"
 #include "drawer.h"
 #include "defs.h"
+#include "vec2d.h"
 
 
 static int collision(entity *bullet, entity *fighter);
@@ -102,17 +103,16 @@ static void do_starfield(stage *s)
 
 static int collision(entity *bullet, entity *fighter)
 {
-	return MAX(bullet->x, fighter->x) < MIN(bullet->x + bullet->w, fighter->x + fighter->w) && 
-	MAX(bullet->y, fighter->y) < MIN(bullet->y + bullet->h, fighter->y + fighter->h);
+	return MAX(bullet->position.x, fighter->position.x) < MIN(bullet->position.x + bullet->w, fighter->position.x + fighter->w) && 
+	MAX(bullet->position.y, fighter->position.y) < MIN(bullet->position.y + bullet->h, fighter->position.y + fighter->h);
 }
 
 static void do_bullets(entity_manager *em, stage *s)
 {
 	entity *prev = &em->bullet_head;
 	for (entity *b = em->bullet_head.next; b != NULL; b = b->next) {
-		b->x += b->dx;
-		b->y += b->dy;
-		if (bullet_hit_fighter(b, s) || b->x < -b->w || b->y < -b->h || b->x > SCREEN_WIDTH || b->y > SCREEN_HEIGHT) {
+		vec2d_add(&b->position, &b->velocity);
+		if (bullet_hit_fighter(b, s) || b->position.x < -b->w || b->position.y < -b->h || b->position.x > SCREEN_WIDTH || b->position.y > SCREEN_HEIGHT) {
 			if (b == em->bullet_tail) {
 				em->bullet_tail = prev;
 			}
@@ -150,15 +150,15 @@ void draw(stage *s, SDL_Renderer *r)
 	draw_starfield(s, r);
 	entity *player = s->em->player;
 	if(player != NULL) {
-		blit(player->texture, player->x, player->y, r);
+		blit(player->texture, player->position.x, player->position.y, r);
 	}
 	
 	for (entity *b = s->em->bullet_head.next; b != NULL; b = b->next) {
-		blit(b->texture, b->x, b->y, r);
+		blit(b->texture, b->position.x, b->position.y, r);
 	}
 
 	for (entity *e = s->em->fighter_head.next; e != NULL ; e = e->next) {
-		blit(e->texture, e->x, e->y, r);
+		blit(e->texture, e->position.x, e->position.y, r);
 	}
 
 	draw_debris(s->gm, r);

@@ -4,7 +4,7 @@ SRC=src
 OBJ=obj
 SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
-LINKER_FLAGS = -lSDL2 -lSDL2_image
+LINKER_FLAGS = -lSDL2 -lSDL2_image -lm
 BIN = bin/shtmup
 
 all:$(BIN)
