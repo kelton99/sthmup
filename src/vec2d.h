@@ -6,8 +6,8 @@
 typedef struct vec2d vec2d;
 
 struct vec2d {
-    float x;
-    float y;
+	float x;
+	float y;
 };
 
 vec2d create_vec2d(float x, float y);

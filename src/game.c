@@ -17,7 +17,6 @@ static void doKeyUp(SDL_KeyboardEvent *event, game *g);
 
 game *init_game()
 {
-	
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
 		exit(1);
@@ -25,7 +24,7 @@ game *init_game()
 
 	game *g = malloc(sizeof(game));
 	g->is_running = 1;
-	memset(g->keyboard, 0, sizeof g->keyboard);
+	memset(g->keyboard, 0, sizeof(g->keyboard));
 	g->window = SDL_CreateWindow("Shooter 01", 0, 0, 1280, 720, 0);
 	g->renderer = SDL_CreateRenderer(g->window, -1, SDL_RENDERER_ACCELERATED);
 	g->s = init_stage(g->renderer);
@@ -40,7 +39,7 @@ game *init_game()
 void handle_input(game *g)
 {
 	SDL_Event event;
-	
+
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
 			case SDL_QUIT:
@@ -55,7 +54,6 @@ void handle_input(game *g)
 				break;
 		}
 	}
-		
 }
 
 void update(game *g)

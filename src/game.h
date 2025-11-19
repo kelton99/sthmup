@@ -13,7 +13,7 @@ typedef struct game {
 	stage *s;
 	int is_running;
 	int keyboard[MAX_KEYBOARD_KEYS];
-} game ;
+} game;
 
 game *init_game();
 void handle_input(game *g);

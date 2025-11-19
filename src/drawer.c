@@ -1,6 +1,7 @@
 #include "drawer.h"
 #include "GLOBALS.h"
 #include "gfx_manager.h"
+#include <SDL2/SDL_rect.h>
 
 #define MAX_LINE_LENGTH 1024
 #define GLYPH_HEIGHT 28
@@ -55,7 +56,7 @@ void draw_debris(gfx_manager *gm, SDL_Renderer *r)
 void draw_background(SDL_Renderer *r)
 {
 	for (int x = background_x ; x < SCREEN_WIDTH ; x += SCREEN_WIDTH) {
-		SDL_Rect dest = {.x = x, .y = 0, .w = SCREEN_WIDTH, .h = SCREEN_HEIGHT};		
+		SDL_Rect dest = {.x = x, .y = 0, .w = SCREEN_WIDTH, .h = SCREEN_HEIGHT};
 		SDL_RenderCopy(r, background, NULL, &dest);
 	}
 }
@@ -72,8 +73,6 @@ void draw_starfield(stage *s, SDL_Renderer *r)
 
 void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *format, ...)
 {
-	int i, len, c;
-	SDL_Rect rect;
 	va_list args;
 
 	memset(&draw_text_buffer, '\0', sizeof(draw_text_buffer));
@@ -82,16 +81,14 @@ void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *
 	vsprintf(draw_text_buffer, format, args);
 	va_end(args);
 
-	len = strlen(draw_text_buffer);
+	int len = strlen(draw_text_buffer);
 
-	rect.w = GLYPH_WIDTH;
-	rect.h = GLYPH_HEIGHT;
-	rect.y = 0;
+	SDL_Rect rect = {.w = GLYPH_WIDTH, .h = GLYPH_HEIGHT, .y = 0};
 
 	SDL_SetTextureColorMod(font_texture, r, g, b);
 
-	for (i = 0 ; i < len ; i++) {
-		c = draw_text_buffer[i];
+	for (int i = 0 ; i < len ; i++) {
+		int c = draw_text_buffer[i];
 
 		if (c >= ' ' && c <= 'Z') {
 			rect.x = (c - ' ') * GLYPH_WIDTH;

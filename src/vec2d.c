@@ -62,7 +62,7 @@ int vec2d_is_equal(vec2d *v1, vec2d *v2)
     return v1->x == v2->x && v1->x == v2->y;
 }
 
-float vec2d_length(vec2d *vec) 			
+float vec2d_length(vec2d *vec)
 {
     return sqrt(pow(vec->x, 2) + pow(vec->y, 2));
 }

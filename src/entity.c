@@ -10,6 +10,5 @@ entity *create_entity(int x, int y, int side, SDL_Texture *texture)
     e->health = 1;
     e->texture = texture;
     SDL_QueryTexture(e->texture, NULL, NULL, &e->w, &e->h);
-		
     return e;
 }

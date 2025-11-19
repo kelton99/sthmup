@@ -52,14 +52,14 @@ void em_clean_entities(entity_manager *em)
 void em_fire_bullet(entity_manager *em)
 {
 	entity *bullet = create_entity(em->player->position.x, em->player->position.y, SIDE_PLAYER, bullet_texture);
-	
+
 	em->bullet_tail->next = bullet;
 	em->bullet_tail = bullet;
-	
+
 	bullet->velocity.x = PLAYER_BULLET_SPEED;
-	
+
 	bullet->position.y += (em->player->h / 2) - (bullet->h / 2);
-	
+
 	em->player->reload = 8;
 }
 
@@ -100,15 +100,14 @@ void em_do_player(entity_manager *em, int *keyboard)
 			em->player->velocity.x /= magnitude;
 			em->player->velocity.y /= magnitude;
 		}
-		
+
 		vec2d_add(&em->player->position, &em->player->velocity);
 	}
 }
 
 void em_do_enemies(entity_manager *em)
 {
-	entity *e;
-	for(e = em->fighter_head.next; e != NULL; e = e->next) {
+	for(entity *e = em->fighter_head.next; e != NULL; e = e->next) {
 		if(e != em->player && em->player != NULL && --e->reload <= 0) {
 			em_fire_alien_bullet(e, em);
 		}
@@ -128,10 +127,11 @@ void em_fire_alien_bullet(entity *e, entity_manager *em)
 	em->player->position.x + (em->player->w / 2),
 	em->player->position.y + (em->player->h / 2),
 	e->position.x, e->position.y,
-	&bullet->velocity);
+	&bullet->velocity
+	);
 
 	vec2d_scalar(&bullet->velocity, ALIEN_BULLET_SPEED);
-	
+
 	bullet->side = SIDE_ALIEN;
 
 	e->reload = (rand() % FPS * 2);
@@ -152,7 +152,7 @@ void em_do_fighters(entity_manager *em)
 			if (e == em->player) {
 				em->player = NULL;
 			}
-			
+
 			if(e == em->fighter_tail) {
 				em->fighter_tail = prev;
 			}
