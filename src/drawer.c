@@ -1,6 +1,8 @@
 #include "drawer.h"
 #include "GLOBALS.h"
+#include "debris.h"
 #include "gfx_manager.h"
+#include "list.h"
 #include <SDL2/SDL_rect.h>
 
 #define MAX_LINE_LENGTH 1024
@@ -37,8 +39,8 @@ void draw_explosions(gfx_manager *gm, SDL_Renderer *r)
 {
 	SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_ADD);
 	SDL_SetTextureBlendMode(explosion_texture, SDL_BLENDMODE_ADD);
-	
-	for (explosion *ex = gm->explosion_head.next ; ex != NULL ; ex = ex->next) {
+	explosion *ex;
+	list_for_each_entry(ex, &gm->explosions, list) {
 		SDL_SetTextureColorMod(explosion_texture, ex->r, ex->g, ex->b);
 		SDL_SetTextureAlphaMod(explosion_texture, ex->a);
 		blit(explosion_texture, ex->position.x, ex->position.y, r);
@@ -48,7 +50,8 @@ void draw_explosions(gfx_manager *gm, SDL_Renderer *r)
 
 void draw_debris(gfx_manager *gm, SDL_Renderer *r)
 {
-	for (debris *d = gm->debris_head.next ; d != NULL ; d = d->next) {
+	debris *d;
+	list_for_each_entry(d, &gm->debris, list) {
 		blit_rect(d->texture, &d->rect, d->position.x, d->position.y, r);
 	}
 }

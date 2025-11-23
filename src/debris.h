@@ -13,7 +13,7 @@ struct debris {
     SDL_Rect rect;
     SDL_Texture *texture;
     int life;
-    debris *next;
+    list_head list;
 };
 
 debris *create_debris(entity *e, int x, int y, int h, int w);

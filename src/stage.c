@@ -41,10 +41,6 @@ static void reset_stage(stage *s)
 {
 	em_clean_entities(s->em);
 	gm_clean_gfx(s->gm);
-
-	s->gm->explosion_tail = &s->gm->explosion_head;
-	s->gm->debris_tail = &s->gm->debris_head;
-
 	em_init_player(s->em);
 	init_starfield(s);
 

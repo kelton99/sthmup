@@ -10,7 +10,7 @@ struct explosion {
     vec2d position;
     vec2d velocity;
     int r, g, b, a;
-    explosion *next;
+    list_head list;
 };
 
 explosion *create_explosion(entity *e);

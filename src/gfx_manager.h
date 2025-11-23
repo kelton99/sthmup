@@ -3,10 +3,11 @@
 
 #include "debris.h"
 #include "explosion.h"
+#include "list.h"
 
 typedef struct gfx_manager {
-    explosion explosion_head, *explosion_tail;
-    debris debris_head, *debris_tail;
+    list_head explosions;
+    list_head debris;
 } gfx_manager;
 
 gfx_manager *init_gfx_manager();

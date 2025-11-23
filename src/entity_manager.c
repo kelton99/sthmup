@@ -50,13 +50,9 @@ void em_clean_entities(entity_manager *em)
 void em_fire_bullet(entity_manager *em)
 {
 	entity *bullet = create_entity(em->player->position.x, em->player->position.y, SIDE_PLAYER, bullet_texture);
-	//INIT_LIST_HEAD(&bullet->list);
 	list_add_tail(&bullet->list, &em->bullets);
-
 	bullet->velocity.x = PLAYER_BULLET_SPEED;
-
 	bullet->position.y += (em->player->h / 2) - (bullet->h / 2);
-
 	em->player->reload = 8;
 }
 
