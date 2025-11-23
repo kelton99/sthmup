@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "vec2d.h"
+#include "list.h"
 
 typedef struct entity entity;
 
@@ -15,7 +16,7 @@ struct entity {
     int reload;
     int side;
     SDL_Texture *texture;
-    entity *next;
+    list_head list;
 };
 
 entity *create_entity(int x, int y, int side, SDL_Texture *texture);

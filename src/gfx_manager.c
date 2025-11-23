@@ -1,12 +1,11 @@
 #include "gfx_manager.h"
 #include "debris.h"
-#include "entity_manager.h"
 #include "explosion.h"
 #include "vec2d.h"
 
 gfx_manager *init_gfx_manager()
 {
-	gfx_manager *gm = calloc(1, sizeof(entity_manager));
+	gfx_manager *gm = calloc(1, sizeof(gfx_manager));
 	gm->explosion_tail = &gm->explosion_head;
 	gm->debris_tail = &gm->debris_head;
 	return gm;

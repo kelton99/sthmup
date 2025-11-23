@@ -3,11 +3,12 @@
 
 #include <SDL2/SDL.h>
 #include "entity.h"
+#include "list.h"
 
 typedef struct entity_manager {
     entity *player;
-    entity fighter_head, *fighter_tail;
-    entity bullet_head, *bullet_tail;
+    list_head fighters;
+    list_head bullets;
 } entity_manager;
 
 entity_manager *init_entity_manager();

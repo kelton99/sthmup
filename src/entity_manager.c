@@ -1,8 +1,9 @@
+#include <SDL2/SDL_scancode.h>
 #include "entity_manager.h"
 #include "GLOBALS.h"
+#include "entity.h"
+#include "list.h"
 #include "vec2d.h"
-#include <SDL2/SDL_scancode.h>
-#include <wchar.h>
 
 #define SIDE_PLAYER 0
 #define SIDE_ALIEN 1
@@ -21,40 +22,36 @@ void em_init_player(entity_manager *em)
 {
 	em->player = create_entity(100, 100, SIDE_PLAYER, player_texture);
 	em->player->health = 3;
-	em->fighter_tail->next = em->player;
-	em->fighter_tail = em->player;
+    list_add_tail(&em->player->list, &em->fighters);
 }
 
 entity_manager *init_entity_manager()
 {
     entity_manager *em = calloc(1, sizeof(entity_manager));
-	em->fighter_tail = &em->fighter_head;
-	em->bullet_tail = &em->bullet_head;
+	INIT_LIST_HEAD(&em->fighters);
+	INIT_LIST_HEAD(&em->bullets);
 	return em;
 }
 
 void em_clean_entities(entity_manager *em)
 {
-    while(em->fighter_head.next) {
-		entity *e = em->fighter_head.next;
-		em->fighter_head.next = e->next;
-		free(e);
+	entity *entry, *temp;
+	list_for_each_entry_safe(entry, temp, &em->fighters, list) {
+		list_del(&entry->list);
+		free(entry);
 	}
-
-	while (em->bullet_head.next) {
-		entity *e = em->bullet_head.next;
-		em->bullet_head.next = e->next;
-		free(e);
+	
+	list_for_each_entry_safe(entry, temp, &em->bullets, list) {
+		list_del(&entry->list);
+		free(entry);
 	}
-
 }
 
 void em_fire_bullet(entity_manager *em)
 {
 	entity *bullet = create_entity(em->player->position.x, em->player->position.y, SIDE_PLAYER, bullet_texture);
-
-	em->bullet_tail->next = bullet;
-	em->bullet_tail = bullet;
+	//INIT_LIST_HEAD(&bullet->list);
+	list_add_tail(&bullet->list, &em->bullets);
 
 	bullet->velocity.x = PLAYER_BULLET_SPEED;
 
@@ -107,9 +104,10 @@ void em_do_player(entity_manager *em, int *keyboard)
 
 void em_do_enemies(entity_manager *em)
 {
-	for(entity *e = em->fighter_head.next; e != NULL; e = e->next) {
-		if(e != em->player && em->player != NULL && --e->reload <= 0) {
-			em_fire_alien_bullet(e, em);
+	entity *entry;
+	list_for_each_entry(entry, &em->fighters, list) {
+		if(entry != em->player && em->player != NULL && --entry->reload <= 0) {
+			em_fire_alien_bullet(entry, em);
 		}
 	}
 }
@@ -117,8 +115,8 @@ void em_do_enemies(entity_manager *em)
 void em_fire_alien_bullet(entity *e, entity_manager *em)
 {
 	entity *bullet = create_entity(e->position.x, e->position.y, e->side, alien_bullet_texture);
-	em->bullet_tail->next = bullet;
-	em->bullet_tail = bullet;
+	INIT_LIST_HEAD(&bullet->list);
+	list_add_tail(&bullet->list, &em->bullets);
 
 	bullet->position.x += (e->w / 2) - (bullet->w / 2);
 	bullet->position.y += (e->h / 2) - (bullet->h / 2);
@@ -139,29 +137,19 @@ void em_fire_alien_bullet(entity *e, entity_manager *em)
 
 void em_do_fighters(entity_manager *em)
 {
-	entity *e;
-	entity *prev = &em->fighter_head;
-
-	for (e = em->fighter_head.next; e != NULL ; e = e->next) {
-		vec2d_add(&e->position, &e->velocity);
-
-		if(e != em->player && e->position.x < -e->w) {
-			e->health = 0;
+	entity *entry, *temp;
+	list_for_each_entry_safe(entry, temp, &em->fighters, list) {
+		vec2d_add(&entry->position, &entry->velocity);
+		if(entry != em->player && entry->position.x < -entry->w) {
+			entry->health = 0;
 		}
-		if(e->health <= 0) {
-			if (e == em->player) {
+		if(entry->health <= 0) {
+			if (entry == em->player) {
 				em->player = NULL;
 			}
-
-			if(e == em->fighter_tail) {
-				em->fighter_tail = prev;
-			}
-
-			prev->next = e->next;
-			free(e);
-			e = prev;
+			list_del(&entry->list);
+			free(entry);
 		}
-		prev = e;
 	}
 }
 
@@ -169,12 +157,11 @@ void em_spawn_enemies(entity_manager *em, int *spawn_timer)
 {
 	if (--*spawn_timer <= 0) {
 		entity *enemy = create_entity(SCREEN_WIDTH, rand() % SCREEN_HEIGHT, SIDE_ALIEN, enemy_texture);
+		INIT_LIST_HEAD(&enemy->list);
+		list_add_tail(&enemy->list, &em->fighters);
 		enemy->velocity.x = -(2 + (rand() % 4));
 		enemy->reload = FPS * (1 + (rand() % 3));
 		*spawn_timer = 30 + (rand() % FPS);
-
-		em->fighter_tail->next = enemy;
-		em->fighter_tail = enemy;
 	}
 }
 

@@ -10,11 +10,11 @@
 #include "drawer.h"
 #include "defs.h"
 #include "vec2d.h"
-
+#include "list.h"
 
 static int collision(entity *bullet, entity *fighter);
 static void do_bullets(entity_manager *em, stage *s);
-static int bullet_hit_fighter(entity *b, stage *s);
+static bool bullet_hit_fighter(entity *b, stage *s);
 static void reset_stage(stage *s);
 static void init_starfield(stage *s);
 static void do_background();
@@ -42,8 +42,6 @@ static void reset_stage(stage *s)
 	em_clean_entities(s->em);
 	gm_clean_gfx(s->gm);
 
-	s->em->fighter_tail = &s->em->fighter_head;
-	s->em->bullet_tail = &s->em->bullet_head;
 	s->gm->explosion_tail = &s->gm->explosion_head;
 	s->gm->debris_tail = &s->gm->debris_head;
 
@@ -109,24 +107,20 @@ static int collision(entity *bullet, entity *fighter)
 
 static void do_bullets(entity_manager *em, stage *s)
 {
-	entity *prev = &em->bullet_head;
-	for (entity *b = em->bullet_head.next; b != NULL; b = b->next) {
+	entity *b, *temp;
+	list_for_each_entry_safe(b, temp, &em->bullets, list) {
 		vec2d_add(&b->position, &b->velocity);
 		if (bullet_hit_fighter(b, s) || b->position.x < -b->w || b->position.y < -b->h || b->position.x > SCREEN_WIDTH || b->position.y > SCREEN_HEIGHT) {
-			if (b == em->bullet_tail) {
-				em->bullet_tail = prev;
-			}
-			prev->next = b->next;
+			list_del(&b->list);
 			free(b);
-			b = prev;
 		}
-		prev = b;
 	}
 }
 
-static int bullet_hit_fighter(entity *b, stage *s)
+static bool bullet_hit_fighter(entity *b, stage *s)
 {
-	for(entity *e = s->em->fighter_head.next; e != NULL; e = e->next) {
+	entity *e;
+	list_for_each_entry(e, &s->em->fighters, list) {
 		if(e->side != b->side && collision(b, e)) {
 			b->health = 0;
 			e->health--;
@@ -138,10 +132,10 @@ static int bullet_hit_fighter(entity *b, stage *s)
 					s->score++;
 				}
 			}
-			return 1;
+			return true;
 		}
 	}
-	return 0;
+	return false;
 }
 
 void draw(stage *s, SDL_Renderer *r)
@@ -153,11 +147,13 @@ void draw(stage *s, SDL_Renderer *r)
 		blit(player->texture, player->position.x, player->position.y, r);
 	}
 	
-	for (entity *b = s->em->bullet_head.next; b != NULL; b = b->next) {
+	entity *b;
+	list_for_each_entry(b, &s->em->bullets, list) {
 		blit(b->texture, b->position.x, b->position.y, r);
 	}
 
-	for (entity *e = s->em->fighter_head.next; e != NULL ; e = e->next) {
+	entity *e;
+	list_for_each_entry(e, &s->em->fighters, list) {
 		blit(e->texture, e->position.x, e->position.y, r);
 	}
 
