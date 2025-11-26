@@ -2,6 +2,7 @@
 #define __GAME__
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "entity.h"
 #include "stage.h"
 

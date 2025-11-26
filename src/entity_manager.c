@@ -3,6 +3,7 @@
 #include "GLOBALS.h"
 #include "entity.h"
 #include "list.h"
+#include "sounds.h"
 #include "vec2d.h"
 
 #define SIDE_PLAYER 0
@@ -54,6 +55,7 @@ void em_fire_bullet(entity_manager *em)
 	bullet->velocity.x = PLAYER_BULLET_SPEED;
 	bullet->position.y += (em->player->h / 2) - (bullet->h / 2);
 	em->player->reload = 8;
+	play_sound(SND_PLAYER_FIRE, CH_PLAYER);
 }
 
 void em_do_player(entity_manager *em, int *keyboard)
@@ -87,7 +89,7 @@ void em_do_player(entity_manager *em, int *keyboard)
 		}
 
 		//vector normalization
-		float magnitude = sqrt(pow(em->player->velocity.x, 2) + pow(em->player->velocity.y, 2)) / 4;
+		float magnitude = sqrt(pow(em->player->velocity.x, 2) + pow(em->player->velocity.y, 2)) / PLAYER_SPEED;
 
 		if (magnitude > 1) {
 			em->player->velocity.x /= magnitude;
@@ -118,10 +120,10 @@ void em_fire_alien_bullet(entity *e, entity_manager *em)
 	bullet->position.y += (e->h / 2) - (bullet->h / 2);
 
 	calc_slope(
-	em->player->position.x + (em->player->w / 2),
-	em->player->position.y + (em->player->h / 2),
-	e->position.x, e->position.y,
-	&bullet->velocity
+		em->player->position.x + (em->player->w / 2),
+		em->player->position.y + (em->player->h / 2),
+		e->position.x, e->position.y,
+		&bullet->velocity
 	);
 
 	vec2d_scalar(&bullet->velocity, ALIEN_BULLET_SPEED);
@@ -129,6 +131,13 @@ void em_fire_alien_bullet(entity *e, entity_manager *em)
 	bullet->side = SIDE_ALIEN;
 
 	e->reload = (rand() % FPS * 2);
+
+	float magnitude = sqrt(pow(bullet->velocity.x, 2) + pow(bullet->velocity.y, 2)) / ALIEN_BULLET_SPEED;
+	if(magnitude > 1) {
+		bullet->velocity.x /= magnitude;
+		bullet->velocity.y /= magnitude;
+	}
+	play_sound(SND_ALIEN_FIRE, CH_ALIEN_FIRE);
 }
 
 void em_do_fighters(entity_manager *em)

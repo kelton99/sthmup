@@ -3,12 +3,11 @@
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_scancode.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "game.h"
 #include "stage.h"
-#include "channels.h"
-#include "sounds.h"
 
 #define CODE event->keysym.scancode
 
@@ -17,7 +16,7 @@ static void doKeyUp(SDL_KeyboardEvent *event, game *g);
 
 game *init_game()
 {
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
 		exit(1);
 	}
@@ -26,7 +25,26 @@ game *init_game()
 	g->is_running = 1;
 	memset(g->keyboard, 0, sizeof(g->keyboard));
 	g->window = SDL_CreateWindow("Shooter 01", 0, 0, 1280, 720, 0);
+
+	if(g->window == NULL) {
+		puts("Could not initialize Window");
+		exit(EXIT_FAILURE);
+	}
+
 	g->renderer = SDL_CreateRenderer(g->window, -1, SDL_RENDERER_ACCELERATED);
+
+	if(g->renderer == NULL) {
+		puts("Could not initialize Renderer");
+		exit(EXIT_FAILURE);
+	}
+	
+    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) == 1) {
+        puts("Couldn't initialize SDL Mixer\n");
+        exit(EXIT_FAILURE);
+    }
+
+	Mix_AllocateChannels(5);
+
 	g->s = init_stage(g->renderer);
 
 	SDL_SetRenderDrawColor(g->renderer, 96, 128, 255, 255);
@@ -83,8 +101,6 @@ void cleanup(game *g)
 	
 	SDL_Quit();
 }
-
-
 
 static void doKeyDown(SDL_KeyboardEvent *event, game *g)
 {

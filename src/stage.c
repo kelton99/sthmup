@@ -6,6 +6,7 @@
 #include "entity.h"
 #include "entity_manager.h"
 #include "gfx_manager.h"
+#include "sounds.h"
 #include "star.h"
 #include "drawer.h"
 #include "defs.h"
@@ -23,6 +24,8 @@ static void do_starfield(stage *s);
 //DEFINING GLOBAL from GLOBALS.H
 int background_x;
 
+#define player s->em->player
+
 stage *init_stage(SDL_Renderer *r)
 {
 	stage *s = calloc(1, sizeof(stage));
@@ -32,6 +35,8 @@ stage *init_stage(SDL_Renderer *r)
 	s->reset_timer = FPS * 3;
 	s->score = 0;
 
+	init_sounds();
+	play_music(true);
 	init_draw(r);
 	reset_stage(s);
 	return s;
@@ -72,7 +77,7 @@ void do_logic(int *keyboard, stage *s)
 	gm_do_explosions(s->gm);
 	gm_do_debris(s->gm);
 
-	if(s->em->player == NULL && --s->reset_timer <= 0) {
+	if(player == NULL && --s->reset_timer <= 0) {
 		reset_stage(s);
 	}
 }
@@ -118,15 +123,20 @@ static bool bullet_hit_fighter(entity *b, stage *s)
 	entity *e;
 	list_for_each_entry(e, &s->em->fighters, list) {
 		if(e->side != b->side && collision(b, e)) {
-			b->health = 0;
+			b->health--;
 			e->health--;
 
-			if(e->health == 0) {
+			if(e->health <= 0) {
 				gm_add_explosions(s->gm, e);
 				gm_add_debris(s->gm, e);
-				if(e != s->em->player) {
+				if(e != player) {
 					s->score++;
+					play_sound(SND_ALIEN_DIE, CH_ANY);
+				} else {
+					play_sound(SND_PLAYER_DIE, CH_PLAYER);
 				}
+			} else {
+				play_sound(SND_PLAYER_HIT, CH_ANY);
 			}
 			return true;
 		}
@@ -138,7 +148,6 @@ void draw(stage *s, SDL_Renderer *r)
 {
 	draw_background(r);
 	draw_starfield(s, r);
-	entity *player = s->em->player;
 	if(player != NULL) {
 		blit(player->texture, player->position.x, player->position.y, r);
 	}
