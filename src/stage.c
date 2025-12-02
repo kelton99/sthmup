@@ -1,21 +1,9 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 
-#include "GLOBALS.h"
 #include "stage.h"
-#include "entity.h"
-#include "entity_manager.h"
-#include "gfx_manager.h"
-#include "sounds.h"
-#include "star.h"
 #include "drawer.h"
 #include "defs.h"
-#include "vec2d.h"
-#include "list.h"
+#include "sounds.h"
 
-static int collision(entity *bullet, entity *fighter);
-static void do_bullets(entity_manager *em, stage *s);
-static bool bullet_hit_fighter(entity *b, stage *s);
 static void reset_stage(stage *s);
 static void init_starfield(stage *s);
 static void do_background();
@@ -71,7 +59,7 @@ void do_logic(int *keyboard, stage *s)
 	em_do_player(s->em, keyboard);
 	em_do_enemies(s->em);
 	em_do_fighters(s->em);
-	do_bullets(s->em, s);
+	em_do_bullets(s->em, s->gm, &s->score);
 	em_spawn_enemies(s->em, &s->spawn_timer);
 	em_clip_player(s->em);
 	gm_do_explosions(s->gm);
@@ -100,49 +88,6 @@ static void do_starfield(stage *s)
 	}
 }
 
-static int collision(entity *bullet, entity *fighter)
-{
-	return MAX(bullet->position.x, fighter->position.x) < MIN(bullet->position.x + bullet->w, fighter->position.x + fighter->w) && 
-	MAX(bullet->position.y, fighter->position.y) < MIN(bullet->position.y + bullet->h, fighter->position.y + fighter->h);
-}
-
-static void do_bullets(entity_manager *em, stage *s)
-{
-	entity *b, *temp;
-	list_for_each_entry_safe(b, temp, &em->bullets, list) {
-		vec2d_add(&b->position, &b->velocity);
-		if (bullet_hit_fighter(b, s) || b->position.x < -b->w || b->position.y < -b->h || b->position.x > SCREEN_WIDTH || b->position.y > SCREEN_HEIGHT) {
-			list_del(&b->list);
-			free(b);
-		}
-	}
-}
-
-static bool bullet_hit_fighter(entity *b, stage *s)
-{
-	entity *e;
-	list_for_each_entry(e, &s->em->fighters, list) {
-		if(e->side != b->side && collision(b, e)) {
-			b->health--;
-			e->health--;
-
-			if(e->health <= 0) {
-				gm_add_explosions(s->gm, e);
-				gm_add_debris(s->gm, e);
-				if(e != player) {
-					s->score++;
-					play_sound(SND_ALIEN_DIE, CH_ANY);
-				} else {
-					play_sound(SND_PLAYER_DIE, CH_PLAYER);
-				}
-			} else {
-				play_sound(SND_PLAYER_HIT, CH_ANY);
-			}
-			return true;
-		}
-	}
-	return false;
-}
 
 void draw(stage *s, SDL_Renderer *r)
 {

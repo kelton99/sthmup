@@ -2,12 +2,9 @@
 #define __STAGE__
 
 #include <SDL2/SDL.h>
-#include "entity.h"
-#include "explosion.h"
-#include "debris.h"
 #include "gfx_manager.h"
-#include "star.h"
 #include "entity_manager.h"
+#include "star.h"
 
 #define MAX_STARS 500
 

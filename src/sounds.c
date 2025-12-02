@@ -1,5 +1,4 @@
 #include "sounds.h"
-#include <SDL2/SDL_mixer.h>
 #include <string.h>
 
 static Mix_Chunk *sounds[SND_MAX];

@@ -6,8 +6,6 @@
 #include "gfx_manager.h"
 #include "stage.h"
 
-//void draw(stage *s, SDL_Renderer *r, entity *player);
-
 void init_draw(SDL_Renderer *r);
 
 void draw_explosions(gfx_manager *gm, SDL_Renderer *r);
