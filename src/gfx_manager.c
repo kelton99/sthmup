@@ -1,9 +1,6 @@
 #include "gfx_manager.h"
 #include "debris.h"
 #include "explosion.h"
-#include "vec2d.h"
-#include "list.h"
-#include <stdlib.h>
 
 gfx_manager *init_gfx_manager()
 {

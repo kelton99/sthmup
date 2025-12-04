@@ -1,13 +1,12 @@
 #include <SDL2/SDL_scancode.h>
 #include "entity_manager.h"
 #include "GLOBALS.h"
-#include "entity.h"
-#include "list.h"
 #include "sounds.h"
-#include "vec2d.h"
 #include "defs.h"
+#include "vec2d.h"
 
 static void calc_slope(int x1, int y1, int x2, int y2, vec2d *velocity);
+static void add_score_pods(entity_manager *em, entity *fighter);
 static bool collision(entity *bullet, entity *fighter);
 static bool is_out_of_bounds(entity *e);
 static bool hit(entity *bullet, entity *fighter);
@@ -26,6 +25,7 @@ entity_manager *init_entity_manager()
     entity_manager *em = calloc(1, sizeof(entity_manager));
 	INIT_LIST_HEAD(&em->fighters);
 	INIT_LIST_HEAD(&em->bullets);
+	INIT_LIST_HEAD(&em->score_pods);
 	return em;
 }
 
@@ -95,16 +95,6 @@ void em_do_player(entity_manager *em, int *keyboard)
 	}
 }
 
-void em_do_enemies(entity_manager *em)
-{
-	entity *entry;
-	list_for_each_entry(entry, &em->fighters, list) {
-		if(entry != player && player != NULL && --entry->reload <= 0) {
-			em_fire_alien_bullet(entry, em);
-		}
-	}
-}
-
 void em_fire_alien_bullet(entity *e, entity_manager *em)
 {
 	entity *bullet = create_entity(e->position.x, e->position.y, e->side, alien_bullet_texture);
@@ -150,6 +140,9 @@ void em_do_fighters(entity_manager *em)
 			list_del(&entry->list);
 			free(entry);
 		}
+		if(entry != player && player != NULL && --entry->reload <= 0) {
+			em_fire_alien_bullet(entry, em);
+		}
 	}
 }
 
@@ -165,7 +158,8 @@ void em_do_bullets(entity_manager *em, gfx_manager *gm, int *score)
 					gm_add_explosions(gm, fighter);
 					gm_add_debris(gm, fighter);
 					if(fighter != player) {
-						++*score;
+						//++*score;
+						add_score_pods(em, fighter);
 						play_sound(SND_ALIEN_DIE, CH_ANY);
 					} else {
 						play_sound(SND_PLAYER_DIE, CH_PLAYER);
@@ -180,6 +174,23 @@ void em_do_bullets(entity_manager *em, gfx_manager *gm, int *score)
 			free(bullet);
 		}
 	}
+}
+
+void em_do_score_pods(entity_manager *em)
+{
+	entity *pod, *pod_temp;
+	list_for_each_entry_safe(pod, pod_temp, &em->score_pods, list) {
+		vec2d_add(&pod->position, &pod->velocity);
+	}
+}
+
+static void add_score_pods(entity_manager *em, entity *fighter)
+{
+	entity *pod = create_entity(fighter->position.x, fighter->position.y, fighter->side, score_pod_texture);
+	INIT_LIST_HEAD(&pod->list);
+	list_add_tail(&pod->list, &em->score_pods);
+	pod->velocity = create_vec2d(-(rand() % 5), (rand() % 5) - (rand() % 5));
+	pod->health = FPS * 10;
 }
 
 static bool hit(entity *bullet, entity *fighter)

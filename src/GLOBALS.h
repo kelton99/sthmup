@@ -11,6 +11,7 @@ extern SDL_Texture *font_texture;
 extern SDL_Texture *enemy_texture;
 extern SDL_Texture *alien_bullet_texture;
 extern SDL_Texture *explosion_texture;
+extern SDL_Texture *score_pod_texture;
 extern SDL_Texture *background;
 
 #endif

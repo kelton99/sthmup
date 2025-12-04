@@ -1,7 +1,6 @@
 #ifndef __STAGE__
 #define __STAGE__
 
-#include <SDL2/SDL.h>
 #include "gfx_manager.h"
 #include "entity_manager.h"
 #include "star.h"

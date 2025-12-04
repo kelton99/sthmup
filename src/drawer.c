@@ -1,9 +1,9 @@
 #include "drawer.h"
 #include "GLOBALS.h"
-#include "debris.h"
 #include "gfx_manager.h"
-#include "list.h"
-#include <SDL2/SDL_rect.h>
+#include "explosion.h"
+#include "debris.h"
+#include <SDL2/SDL_image.h>
 
 #define MAX_LINE_LENGTH 1024
 #define GLYPH_HEIGHT 28
@@ -22,6 +22,7 @@ SDL_Texture *font_texture;
 SDL_Texture *enemy_texture;
 SDL_Texture *alien_bullet_texture;
 SDL_Texture *explosion_texture;
+SDL_Texture *score_pod_texture;
 SDL_Texture *background;
 
 void init_draw(SDL_Renderer *r)
@@ -32,6 +33,7 @@ void init_draw(SDL_Renderer *r)
 	player_texture = IMG_LoadTexture(r, "gfx/player.png");
 	background = IMG_LoadTexture(r, "gfx/background.png");
 	explosion_texture = IMG_LoadTexture(r, "gfx/explosion.png");
+	score_pod_texture = IMG_LoadTexture(r, "gfx/points.png");
 	font_texture = IMG_LoadTexture(r, "gfx/font.png");
 }
 
