@@ -59,8 +59,8 @@ void do_logic(int *keyboard, stage *s)
 	do_starfield(s);
 	em_do_player(s->em, keyboard);
 	em_do_fighters(s->em);
-	em_do_bullets(s->em, s->gm, &s->score);
-	em_do_score_pods(s->em);
+	em_do_bullets(s->em, s->gm);
+	em_do_score_pods(s->em, &s->score);
 	em_spawn_enemies(s->em, &s->spawn_timer);
 	em_clip_player(s->em);
 	gm_do_explosions(s->gm);

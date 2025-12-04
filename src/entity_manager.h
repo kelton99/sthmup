@@ -17,8 +17,8 @@ void em_fire_bullet(entity_manager *em);
 void em_do_player(entity_manager *em, int *keyboard);
 void em_fire_alien_bullet(entity *e, entity_manager *em);
 void em_do_fighters(entity_manager *em);
-void em_do_bullets(entity_manager *em, gfx_manager *gm, int *score);
-void em_do_score_pods(entity_manager *em);
+void em_do_bullets(entity_manager *em, gfx_manager *gm);
+void em_do_score_pods(entity_manager *em, int *score);
 void em_spawn_enemies(entity_manager *em, int *spawn_timer);
 void em_clip_player(entity_manager *em);
 
