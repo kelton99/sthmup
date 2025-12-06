@@ -4,12 +4,14 @@
 #include "list.h"
 #include "sounds.h"
 #include "defs.h"
+#include "vec2d.h"
 
 static void calc_slope(int x1, int y1, int x2, int y2, vec2d *velocity);
 static void add_score_pods(entity_manager *em, entity *fighter);
 static bool collision(entity *e1, entity *e2);
 static bool is_out_of_bounds(entity *e);
 static bool hit(entity *bullet, entity *fighter);
+static void normalize(vec2d *v, int speed);
 
 #define player em->player
 
@@ -89,12 +91,7 @@ void em_do_player(entity_manager *em, int *keyboard)
 		}
 
 		//vector normalization
-		float magnitude = sqrt(pow(player->velocity.x, 2) + pow(player->velocity.y, 2)) / PLAYER_SPEED;
-
-		if (magnitude > 1) {
-			player->velocity.x /= magnitude;
-			player->velocity.y /= magnitude;
-		}
+		normalize(&player->velocity, PLAYER_SPEED);
 
 		vec2d_add(&player->position, &player->velocity);
 	}
@@ -122,11 +119,8 @@ void em_fire_alien_bullet(entity *e, entity_manager *em)
 
 	e->reload = (rand() % FPS * 2);
 
-	float magnitude = sqrt(pow(bullet->velocity.x, 2) + pow(bullet->velocity.y, 2)) / ALIEN_BULLET_SPEED;
-	if(magnitude > 1) {
-		bullet->velocity.x /= magnitude;
-		bullet->velocity.y /= magnitude;
-	}
+	normalize(&bullet->velocity, ALIEN_BULLET_SPEED);
+
 	play_sound(SND_ALIEN_FIRE, CH_ALIEN_FIRE);
 }
 
@@ -184,6 +178,17 @@ void em_do_score_pods(entity_manager *em, int *score)
 {
 	entity *pod, *pod_temp;
 	list_for_each_entry_safe(pod, pod_temp, &em->score_pods, list) {
+		
+		//Bounce at the edges of the screen
+		if(pod->position.x < 0 || pod->position.x + pod->w > SCREEN_WIDTH) {
+			pod->position.x = pod->position.x < 0 ? 0 : SCREEN_WIDTH - pod->w;
+			pod->velocity.x *= -1;
+		}
+		if(pod->position.y < 0 || pod->position.y + pod->h > SCREEN_HEIGHT) {
+			pod->position.y = pod->position.y < 0 ? 0 : SCREEN_HEIGHT - pod->h;
+			pod->velocity.y *= -1;
+		}
+		normalize(&pod->velocity, SCORE_POD_SPEED);
 		vec2d_add(&pod->position, &pod->velocity);
 		pod->health--;
 		if(player != NULL) {
@@ -204,7 +209,7 @@ static void add_score_pods(entity_manager *em, entity *fighter)
 	entity *pod = create_entity(fighter->position.x, fighter->position.y, fighter->side, score_pod_texture);
 	INIT_LIST_HEAD(&pod->list);
 	list_add_tail(&pod->list, &em->score_pods);
-	pod->velocity = create_vec2d(-(rand() % 5), (rand() % 5) - (rand() % 5));
+	pod->velocity = create_vec2d(SCORE_POD_SPEED, rand() % 2 == 1 ? SCORE_POD_SPEED : -SCORE_POD_SPEED);
 	pod->health = FPS * 10;
 }
 
@@ -277,4 +282,13 @@ static bool is_out_of_bounds(entity *e)
 	e->position.y < -e->h || 
 	e->position.x > SCREEN_WIDTH || 
 	e->position.y > SCREEN_HEIGHT;
+}
+
+static void normalize(vec2d *v, int speed)
+{
+	float magnitude = sqrt(pow(v->x, 2) + pow(v->y, 2)) / speed;
+	if(magnitude > 1) {
+		v->x /= magnitude;
+		v->y /= magnitude;
+	}
 }
