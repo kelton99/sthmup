@@ -1,10 +1,8 @@
 #include <SDL2/SDL_scancode.h>
 #include "entity_manager.h"
 #include "GLOBALS.h"
-#include "list.h"
 #include "sounds.h"
 #include "defs.h"
-#include "vec2d.h"
 
 static void calc_slope(int x1, int y1, int x2, int y2, vec2d *velocity);
 static void add_score_pods(entity_manager *em, entity *fighter);
@@ -195,6 +193,7 @@ void em_do_score_pods(entity_manager *em, int *score)
 			if(collision(pod, player)) {
 				pod->health = 0;
 				++*score;
+				play_sound(SND_COLLECT_POD, CH_COLLET_POD);
 			}
 			if(pod->health <= 0 || is_out_of_bounds(pod)) {
 				list_del(&pod->list);
