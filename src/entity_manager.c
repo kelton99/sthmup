@@ -208,7 +208,7 @@ static void add_score_pods(entity_manager *em, entity *fighter)
 	entity *pod = create_entity(fighter->position.x, fighter->position.y, fighter->side, score_pod_texture);
 	INIT_LIST_HEAD(&pod->list);
 	list_add_tail(&pod->list, &em->score_pods);
-	pod->velocity = create_vec2d(SCORE_POD_SPEED, rand() % 2 == 1 ? SCORE_POD_SPEED : -SCORE_POD_SPEED);
+	pod->velocity = create_vec2d(-SCORE_POD_SPEED, rand() % 2 == 1 ? SCORE_POD_SPEED : -SCORE_POD_SPEED);
 	pod->health = FPS * 10;
 }
 
