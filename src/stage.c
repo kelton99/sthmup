@@ -108,10 +108,7 @@ void draw(stage *s, SDL_Renderer *r)
 		blit(e->texture, e->position.x, e->position.y, r);
 	}
 
-	entity *p;
-	list_for_each_entry(p, &s->em->score_pods, list) {
-		blit(p->texture, p->position.x, p->position.y, r);
-	}
+	draw_pods(&s->em->score_pods, r);
 
 	draw_debris(s->gm, r);
 	draw_explosions(s->gm, r);

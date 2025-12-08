@@ -1,9 +1,7 @@
 #include "drawer.h"
 #include "GLOBALS.h"
-#include "gfx_manager.h"
 #include "explosion.h"
 #include "debris.h"
-#include <SDL2/SDL_image.h>
 
 #define MAX_LINE_LENGTH 1024
 #define GLYPH_HEIGHT 28
@@ -46,6 +44,18 @@ void draw_explosions(gfx_manager *gm, SDL_Renderer *r)
 		SDL_SetTextureColorMod(explosion_texture, ex->r, ex->g, ex->b);
 		SDL_SetTextureAlphaMod(explosion_texture, ex->a);
 		blit(explosion_texture, ex->position.x, ex->position.y, r);
+	}
+	SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+}
+
+void draw_pods(list_head *pods, SDL_Renderer *r)
+{
+	SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_ADD);
+	SDL_SetTextureBlendMode(score_pod_texture, SDL_BLENDMODE_ADD);
+	entity *pod;
+	list_for_each_entry(pod, pods, list) {
+		SDL_SetTextureAlphaMod(score_pod_texture, pod->health * 0.425);
+		blit(score_pod_texture, pod->position.x, pod->position.y, r);
 	}
 	SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
 }
