@@ -2,8 +2,6 @@
 #define __DEBRIS__
 
 #include "entity.h"
-#include "vec2d.h"
-#include <SDL2/SDL.h>
 
 typedef struct debris debris;
 

@@ -2,6 +2,7 @@
 #include "stage.h"
 #include "drawer.h"
 #include "defs.h"
+#include "entity_manager.h"
 #include "sounds.h"
 
 static void reset_stage(stage *s);
@@ -57,9 +58,9 @@ void do_logic(int *keyboard, stage *s)
 	do_background();
 	do_starfield(s);
 	em_do_player(s->em, keyboard);
-	em_do_enemies(s->em);
 	em_do_fighters(s->em);
-	em_do_bullets(s->em, s->gm, &s->score);
+	em_do_bullets(s->em, s->gm);
+	em_do_score_pods(s->em, &s->score);
 	em_spawn_enemies(s->em, &s->spawn_timer);
 	em_clip_player(s->em);
 	gm_do_explosions(s->gm);
@@ -106,6 +107,8 @@ void draw(stage *s, SDL_Renderer *r)
 	list_for_each_entry(e, &s->em->fighters, list) {
 		blit(e->texture, e->position.x, e->position.y, r);
 	}
+
+	draw_pods(&s->em->score_pods, r);
 
 	draw_debris(s->gm, r);
 	draw_explosions(s->gm, r);

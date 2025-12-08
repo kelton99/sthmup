@@ -1,9 +1,7 @@
 #ifndef __FX_MANAGER__
 #define __FX_MANAGER__
 
-#include "debris.h"
-#include "explosion.h"
-#include "list.h"
+#include "entity.h"
 
 typedef struct gfx_manager {
     list_head explosions;

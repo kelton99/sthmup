@@ -12,6 +12,8 @@ void draw_explosions(gfx_manager *gm, SDL_Renderer *r);
 
 void draw_debris(gfx_manager *gm, SDL_Renderer *r);
 
+void draw_pods(list_head *pods, SDL_Renderer *r);
+
 void draw_background(SDL_Renderer *r);
 
 void draw_starfield(stage *s, SDL_Renderer *r);

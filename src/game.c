@@ -1,10 +1,5 @@
-#include <SDL2/SDL.h>
+
 #include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_scancode.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "game.h"
 #include "stage.h"
@@ -47,9 +42,9 @@ game *init_game()
 
 	g->s = init_stage(g->renderer);
 
-	SDL_SetRenderDrawColor(g->renderer, 96, 128, 255, 255);
+	//SDL_SetRenderDrawColor(g->renderer, 96, 128, 255, 255);
 	
-	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+	IMG_Init(IMG_INIT_PNG);
 
 	return g;
 }

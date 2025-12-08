@@ -1,16 +1,15 @@
 #include <SDL2/SDL_scancode.h>
 #include "entity_manager.h"
 #include "GLOBALS.h"
-#include "entity.h"
-#include "list.h"
 #include "sounds.h"
-#include "vec2d.h"
 #include "defs.h"
 
 static void calc_slope(int x1, int y1, int x2, int y2, vec2d *velocity);
-static bool collision(entity *bullet, entity *fighter);
+static void add_score_pods(entity_manager *em, entity *fighter);
+static bool collision(entity *e1, entity *e2);
 static bool is_out_of_bounds(entity *e);
 static bool hit(entity *bullet, entity *fighter);
+static void normalize(vec2d *v, int speed);
 
 #define player em->player
 
@@ -26,6 +25,7 @@ entity_manager *init_entity_manager()
     entity_manager *em = calloc(1, sizeof(entity_manager));
 	INIT_LIST_HEAD(&em->fighters);
 	INIT_LIST_HEAD(&em->bullets);
+	INIT_LIST_HEAD(&em->score_pods);
 	return em;
 }
 
@@ -38,6 +38,11 @@ void em_clean_entities(entity_manager *em)
 	}
 	
 	list_for_each_entry_safe(entry, temp, &em->bullets, list) {
+		list_del(&entry->list);
+		free(entry);
+	}
+
+	list_for_each_entry_safe(entry, temp, &em->score_pods, list) {
 		list_del(&entry->list);
 		free(entry);
 	}
@@ -84,24 +89,9 @@ void em_do_player(entity_manager *em, int *keyboard)
 		}
 
 		//vector normalization
-		float magnitude = sqrt(pow(player->velocity.x, 2) + pow(player->velocity.y, 2)) / PLAYER_SPEED;
-
-		if (magnitude > 1) {
-			player->velocity.x /= magnitude;
-			player->velocity.y /= magnitude;
-		}
+		normalize(&player->velocity, PLAYER_SPEED);
 
 		vec2d_add(&player->position, &player->velocity);
-	}
-}
-
-void em_do_enemies(entity_manager *em)
-{
-	entity *entry;
-	list_for_each_entry(entry, &em->fighters, list) {
-		if(entry != player && player != NULL && --entry->reload <= 0) {
-			em_fire_alien_bullet(entry, em);
-		}
 	}
 }
 
@@ -127,11 +117,8 @@ void em_fire_alien_bullet(entity *e, entity_manager *em)
 
 	e->reload = (rand() % FPS * 2);
 
-	float magnitude = sqrt(pow(bullet->velocity.x, 2) + pow(bullet->velocity.y, 2)) / ALIEN_BULLET_SPEED;
-	if(magnitude > 1) {
-		bullet->velocity.x /= magnitude;
-		bullet->velocity.y /= magnitude;
-	}
+	normalize(&bullet->velocity, ALIEN_BULLET_SPEED);
+
 	play_sound(SND_ALIEN_FIRE, CH_ALIEN_FIRE);
 }
 
@@ -150,10 +137,13 @@ void em_do_fighters(entity_manager *em)
 			list_del(&entry->list);
 			free(entry);
 		}
+		if(entry != player && player != NULL && --entry->reload <= 0) {
+			em_fire_alien_bullet(entry, em);
+		}
 	}
 }
 
-void em_do_bullets(entity_manager *em, gfx_manager *gm, int *score)
+void em_do_bullets(entity_manager *em, gfx_manager *gm)
 {
 	entity *bullet, *bullet_temp;
 	list_for_each_entry_safe(bullet, bullet_temp, &em->bullets, list) {
@@ -165,7 +155,7 @@ void em_do_bullets(entity_manager *em, gfx_manager *gm, int *score)
 					gm_add_explosions(gm, fighter);
 					gm_add_debris(gm, fighter);
 					if(fighter != player) {
-						++*score;
+						add_score_pods(em, fighter);
 						play_sound(SND_ALIEN_DIE, CH_ANY);
 					} else {
 						play_sound(SND_PLAYER_DIE, CH_PLAYER);
@@ -180,6 +170,46 @@ void em_do_bullets(entity_manager *em, gfx_manager *gm, int *score)
 			free(bullet);
 		}
 	}
+}
+
+void em_do_score_pods(entity_manager *em, int *score)
+{
+	entity *pod, *pod_temp;
+	list_for_each_entry_safe(pod, pod_temp, &em->score_pods, list) {
+		
+		//Bounce at the edges of the screen
+		if(pod->position.x < 0 || pod->position.x + pod->w > SCREEN_WIDTH) {
+			pod->position.x = pod->position.x < 0 ? 0 : SCREEN_WIDTH - pod->w;
+			pod->velocity.x *= -1;
+		}
+		if(pod->position.y < 0 || pod->position.y + pod->h > SCREEN_HEIGHT) {
+			pod->position.y = pod->position.y < 0 ? 0 : SCREEN_HEIGHT - pod->h;
+			pod->velocity.y *= -1;
+		}
+		normalize(&pod->velocity, SCORE_POD_SPEED);
+		vec2d_add(&pod->position, &pod->velocity);
+		pod->health--;
+		if(player != NULL) {
+			if(collision(pod, player)) {
+				pod->health = 0;
+				++*score;
+				play_sound(SND_COLLECT_POD, CH_COLLET_POD);
+			}
+			if(pod->health <= 0 || is_out_of_bounds(pod)) {
+				list_del(&pod->list);
+				free(pod);
+			}
+		}
+	}
+}
+
+static void add_score_pods(entity_manager *em, entity *fighter)
+{
+	entity *pod = create_entity(fighter->position.x, fighter->position.y, fighter->side, score_pod_texture);
+	INIT_LIST_HEAD(&pod->list);
+	list_add_tail(&pod->list, &em->score_pods);
+	pod->velocity = create_vec2d(-SCORE_POD_SPEED, rand() % 2 == 1 ? SCORE_POD_SPEED : -SCORE_POD_SPEED);
+	pod->health = FPS * 10;
 }
 
 static bool hit(entity *bullet, entity *fighter)
@@ -239,10 +269,10 @@ static void calc_slope(int x1, int y1, int x2, int y2, vec2d *velocity)
 	velocity->y /= steps;
 }
 
-static bool collision(entity *bullet, entity *fighter)
+static bool collision(entity *e1, entity *e2)
 {
-	return MAX(bullet->position.x, fighter->position.x) < MIN(bullet->position.x + bullet->w, fighter->position.x + fighter->w) && 
-	MAX(bullet->position.y, fighter->position.y) < MIN(bullet->position.y + bullet->h, fighter->position.y + fighter->h);
+	return MAX(e1->position.x, e2->position.x) < MIN(e1->position.x + e1->w, e2->position.x + e2->w) && 
+	MAX(e1->position.y, e2->position.y) < MIN(e1->position.y + e1->h, e2->position.y + e2->h);
 }
 
 static bool is_out_of_bounds(entity *e)
@@ -251,4 +281,13 @@ static bool is_out_of_bounds(entity *e)
 	e->position.y < -e->h || 
 	e->position.x > SCREEN_WIDTH || 
 	e->position.y > SCREEN_HEIGHT;
+}
+
+static void normalize(vec2d *v, int speed)
+{
+	float magnitude = sqrt(pow(v->x, 2) + pow(v->y, 2)) / speed;
+	if(magnitude > 1) {
+		v->x /= magnitude;
+		v->y /= magnitude;
+	}
 }

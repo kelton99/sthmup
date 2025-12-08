@@ -3,13 +3,14 @@
 #define __SOUNDS__
 
 #include <SDL2/SDL_mixer.h>
-#define SND_MAX 5
-#define MAX_SND_CHANNELS 8
+#define SND_MAX 8
+#define MAX_SND_CHANNELS 5
 
 enum channels {
     CH_ANY = -1,
     CH_PLAYER,
     CH_ALIEN_FIRE,
+    CH_COLLET_POD,
 };
 
 enum sounds {
@@ -18,6 +19,7 @@ enum sounds {
     SND_PLAYER_HIT,
     SND_PLAYER_DIE,
     SND_ALIEN_DIE,
+    SND_COLLECT_POD,
 };
 
 void init_sounds();

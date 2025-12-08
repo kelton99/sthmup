@@ -21,6 +21,7 @@ static void load_sounds(void)
     sounds[SND_PLAYER_DIE] = Mix_LoadWAV("sound/player_die.mp3");
     sounds[SND_PLAYER_HIT] = Mix_LoadWAV("sound/player_hit.mp3");
     sounds[SND_ALIEN_DIE] = Mix_LoadWAV("sound/enemy_die.mp3");
+    sounds[SND_COLLECT_POD] = Mix_LoadWAV("sound/collect.mp3");
 }
 
 void load_music(char *filename)
