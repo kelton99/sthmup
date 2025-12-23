@@ -6,16 +6,13 @@
 #include "sounds.h"
 
 static void reset_stage(stage *s);
-static void init_starfield(stage *s);
-static void do_background();
-static void do_starfield(stage *s);
 
 //DEFINING GLOBAL from GLOBALS.H
 int background_x;
 
 #define player s->em->player
 
-stage *init_stage(SDL_Renderer *r)
+stage *init_stage()
 {
 	stage *s = calloc(1, sizeof(stage));
 	s->em = init_entity_manager();
@@ -23,10 +20,8 @@ stage *init_stage(SDL_Renderer *r)
 	s->spawn_timer = 0;
 	s->reset_timer = FPS * 3;
 	s->score = 0;
-
 	init_sounds();
 	play_music(true);
-	init_draw(r);
 	reset_stage(s);
 	return s;
 }
@@ -36,27 +31,16 @@ static void reset_stage(stage *s)
 	em_clean_entities(s->em);
 	gm_clean_gfx(s->gm);
 	em_init_player(s->em);
-	init_starfield(s);
+	//init_starfield(s);
 
 	s->spawn_timer = 0;
 	s->reset_timer = FPS * 3;
 	s->score = 0;
 }
 
-
-static void init_starfield(stage *s)
+void do_stage_logic(int *keyboard, stage *s)
 {
-	for(int i = 0; i < MAX_STARS; i++) {
-		s->stars[i].x = rand() % SCREEN_WIDTH;
-		s->stars[i].y = rand() % SCREEN_HEIGHT;
-		s->stars[i].speed = 1 + rand() % 8;
-	}
-}
 
-void do_logic(int *keyboard, stage *s)
-{
-	do_background();
-	do_starfield(s);
 	em_do_player(s->em, keyboard);
 	em_do_fighters(s->em);
 	em_do_bullets(s->em, s->gm);
@@ -71,29 +55,8 @@ void do_logic(int *keyboard, stage *s)
 	}
 }
 
-static void do_background()
+void draw_stage(stage *s, SDL_Renderer *r)
 {
-	if(--background_x < -SCREEN_WIDTH) {
-		background_x = 0;
-	}
-}
-
-static void do_starfield(stage *s)
-{
-	for(int i = 0; i < MAX_STARS; i++) {
-		s->stars[i].x -= s->stars[i].speed;
-
-		if(s->stars[i].x < 0) {
-			s->stars[i].x += SCREEN_WIDTH;
-		}
-	}
-}
-
-
-void draw(stage *s, SDL_Renderer *r)
-{
-	draw_background(r);
-	draw_starfield(s, r);
 	if(player != NULL) {
 		blit(player->texture, player->position.x, player->position.y, r);
 	}

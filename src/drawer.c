@@ -2,6 +2,8 @@
 #include "GLOBALS.h"
 #include "explosion.h"
 #include "debris.h"
+#include "highscore.h"
+#include "star.h"
 
 #define MAX_LINE_LENGTH 1024
 #define GLYPH_HEIGHT 28
@@ -76,13 +78,13 @@ void draw_background(SDL_Renderer *r)
 	}
 }
 
-void draw_starfield(stage *s, SDL_Renderer *r)
+void draw_starfield(star *stars, SDL_Renderer *r)
 {
 	for (int i = 0 ; i < MAX_STARS ; i++) {
-		int c = 32 * s->stars[i].speed;
+		int c = 32 * stars[i].speed;
 		SDL_SetRenderDrawColor(r, c, c, c, 255);
 		
-		SDL_RenderDrawLine(r, s->stars[i].x, s->stars[i].y, s->stars[i].x + c / 10, s->stars[i].y);
+		SDL_RenderDrawLine(r, stars[i].x, stars[i].y, stars[i].x + c / 10, stars[i].y);
 	}
 }
 
@@ -122,6 +124,21 @@ void draw_hud(stage *s, entity *player, SDL_Renderer *renderer)
 		draw_text(1080, 50, 255, 255, 255, renderer, "HEALTH: %d", 0);
 		draw_text(400, 400, 255, 255, 255, renderer, "YOU GOT DESTROYED!");
 	}
+}
+
+void draw_highscore(highscore_table *table, SDL_Renderer *renderer)
+{
+	draw_text(427, 70, 255, 255, 255, renderer, "Highscores");
+	for(int i = 0, y = 150; i < NUM_HIGHSCORES; i++) {
+		int blue = 255;
+		if(table->highscore[i].recent) {
+			blue = 0;
+		}
+		draw_text(425, y, 255, 255, blue, renderer, "#%d ............. %03d", (i + 1), table->highscore[i].score);
+		y += 50;
+	}
+
+	draw_text(425, 600, 255, 255, 255, renderer, "PRESS FIRE TO PLAY");
 }
 
 void blit(SDL_Texture *texture, int x, int y, SDL_Renderer *r)

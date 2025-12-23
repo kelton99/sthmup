@@ -4,7 +4,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "gfx_manager.h"
+#include "highscore.h"
 #include "stage.h"
+#include "star.h"
 
 void init_draw(SDL_Renderer *r);
 
@@ -16,11 +18,13 @@ void draw_pods(list_head *pods, SDL_Renderer *r);
 
 void draw_background(SDL_Renderer *r);
 
-void draw_starfield(stage *s, SDL_Renderer *r);
+void draw_starfield(star *stars, SDL_Renderer *r);
 
 void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *format, ...);
 
 void draw_hud(stage *s, entity *player, SDL_Renderer *renderer);
+
+void draw_highscore(highscore_table *table, SDL_Renderer *renderer);
 
 void blit(SDL_Texture *texture, int x, int y, SDL_Renderer *r);
 

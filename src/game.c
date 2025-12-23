@@ -2,10 +2,17 @@
 #include <SDL2/SDL_image.h>
 
 #include "game.h"
+#include "drawer.h"
 #include "stage.h"
+#include "GLOBALS.h"
+#include "defs.h"
 
 #define CODE event->keysym.scancode
 
+static void do_background();
+static void do_starfield(game *g);
+static void init_highscore_table(game *g);
+static void init_starfield(game *g);
 static void doKeyDown(SDL_KeyboardEvent *event, game *g);
 static void doKeyUp(SDL_KeyboardEvent *event, game *g);
 
@@ -40,13 +47,22 @@ game *init_game()
 
 	Mix_AllocateChannels(5);
 
-	g->s = init_stage(g->renderer);
-
-	//SDL_SetRenderDrawColor(g->renderer, 96, 128, 255, 255);
-	
+	g->state = HIGHSCORE;
+	init_highscore_table(g);
+	init_starfield(g);
+	init_draw(g->renderer);	
 	IMG_Init(IMG_INIT_PNG);
 
 	return g;
+}
+
+static void init_highscore_table(game *g)
+{
+	memset(&g->highscore_table, 0, sizeof(highscore_table));
+	for(int i = 0; i < NUM_HIGHSCORES; i++) {
+		g->highscore_table.highscore[i].score = NUM_HIGHSCORES - 1;
+	}
+
 }
 
 void handle_input(game *g)
@@ -74,13 +90,36 @@ void update(game *g)
 	if(g->keyboard[SDL_SCANCODE_Q]) {
 		g->is_running = 0;
 	}
-	do_logic(g->keyboard, g->s);
+	do_background();
+	do_starfield(g);
+
+	switch (g->state) {
+		case HIGHSCORE:
+			if (g->keyboard[SDL_SCANCODE_LCTRL]) {
+        		g->s = init_stage();
+				g->state = STAGE;
+    		}   
+			break;
+		case STAGE:
+			do_stage_logic(g->keyboard, g->s);
+			break;
+	}
+
 }
 
 void render(game *g)
 {
 	SDL_RenderClear(g->renderer);
-	draw(g->s, g->renderer);
+	draw_background(g->renderer);
+	draw_starfield(g->stars, g->renderer);
+	switch (g->state) {
+		case HIGHSCORE:
+			draw_highscore(&g->highscore_table, g->renderer);
+			break;
+		case STAGE:
+			draw_stage(g->s, g->renderer);
+			break;
+	}
 	SDL_RenderPresent(g->renderer);
 }
 
@@ -107,4 +146,31 @@ static void doKeyUp(SDL_KeyboardEvent *event, game *g)
 {
 	if (event->repeat == 0 && CODE < MAX_KEYBOARD_KEYS)
 		g->keyboard[CODE] = 0;
+}
+
+static void init_starfield(game *g)
+{
+	for(int i = 0; i < MAX_STARS; i++) {
+		g->stars[i].x = rand() % SCREEN_WIDTH;
+		g->stars[i].y = rand() % SCREEN_HEIGHT;
+		g->stars[i].speed = 1 + rand() % 8;
+	}
+}
+
+static void do_background()
+{
+	if(--background_x < -SCREEN_WIDTH) {
+		background_x = 0;
+	}
+}
+
+static void do_starfield(game *g)
+{
+	for(int i = 0; i < MAX_STARS; i++) {
+		g->stars[i].x -= g->stars[i].speed;
+
+		if(g->stars[i].x < 0) {
+			g->stars[i].x += SCREEN_WIDTH;
+		}
+	}
 }
