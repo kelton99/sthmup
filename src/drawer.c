@@ -4,6 +4,7 @@
 #include "debris.h"
 #include "highscore.h"
 #include "star.h"
+#include "stage.h"
 
 #define MAX_LINE_LENGTH 1024
 #define GLYPH_HEIGHT 28
@@ -130,10 +131,7 @@ void draw_highscore(highscore_table *table, SDL_Renderer *renderer)
 {
 	draw_text(427, 70, 255, 255, 255, renderer, "Highscores");
 	for(int i = 0, y = 150; i < NUM_HIGHSCORES; i++) {
-		int blue = 255;
-		if(table->highscore[i].recent) {
-			blue = 0;
-		}
+		const int blue = table->highscore[i].recent ? 0: 255;
 		draw_text(425, y, 255, 255, blue, renderer, "#%d ............. %03d", (i + 1), table->highscore[i].score);
 		y += 50;
 	}

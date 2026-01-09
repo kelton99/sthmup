@@ -36,7 +36,7 @@ void em_clean_entities(entity_manager *em)
 		list_del(&entry->list);
 		free(entry);
 	}
-	
+
 	list_for_each_entry_safe(entry, temp, &em->bullets, list) {
 		list_del(&entry->list);
 		free(entry);
@@ -277,9 +277,9 @@ static bool collision(entity *e1, entity *e2)
 
 static bool is_out_of_bounds(entity *e)
 {
-	return e->position.x < -e->w || 
-	e->position.y < -e->h || 
-	e->position.x > SCREEN_WIDTH || 
+	return e->position.x < -e->w ||
+	e->position.y < -e->h ||
+	e->position.x > SCREEN_WIDTH ||
 	e->position.y > SCREEN_HEIGHT;
 }
 

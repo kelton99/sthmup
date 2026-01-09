@@ -1,17 +1,16 @@
 
 #include <SDL2/SDL_image.h>
-
+#include <stdlib.h>
+#include <stddef.h>
 #include "game.h"
 #include "drawer.h"
-#include "stage.h"
+#include "sounds.h"
 #include "GLOBALS.h"
-#include "defs.h"
 
 #define CODE event->keysym.scancode
 
 static void do_background();
 static void do_starfield(game *g);
-static void init_highscore_table(game *g);
 static void init_starfield(game *g);
 static void doKeyDown(SDL_KeyboardEvent *event, game *g);
 static void doKeyUp(SDL_KeyboardEvent *event, game *g);
@@ -24,6 +23,7 @@ game *init_game()
 	}
 
 	game *g = malloc(sizeof(game));
+	g->s = nullptr;
 	g->is_running = 1;
 	memset(g->keyboard, 0, sizeof(g->keyboard));
 	g->window = SDL_CreateWindow("Shooter 01", 0, 0, 1280, 720, 0);
@@ -46,23 +46,15 @@ game *init_game()
     }
 
 	Mix_AllocateChannels(5);
-
 	g->state = HIGHSCORE;
-	init_highscore_table(g);
+	init_highscore_table(&g->highscore_table);
 	init_starfield(g);
 	init_draw(g->renderer);	
+	init_sounds();
+	play_music(true);
 	IMG_Init(IMG_INIT_PNG);
 
 	return g;
-}
-
-static void init_highscore_table(game *g)
-{
-	memset(&g->highscore_table, 0, sizeof(highscore_table));
-	for(int i = 0; i < NUM_HIGHSCORES; i++) {
-		g->highscore_table.highscore[i].score = NUM_HIGHSCORES - 1;
-	}
-
 }
 
 void handle_input(game *g)
@@ -95,13 +87,13 @@ void update(game *g)
 
 	switch (g->state) {
 		case HIGHSCORE:
-			if (g->keyboard[SDL_SCANCODE_LCTRL]) {
-        		g->s = init_stage();
-				g->state = STAGE;
-    		}   
+			if (g->keyboard[SDL_SCANCODE_Z]) {
+        	g->s = init_stage();
+			g->state = STAGE;
+    	}  
 			break;
 		case STAGE:
-			do_stage_logic(g->keyboard, g->s);
+			do_stage_logic(g->keyboard, &g->state, &g->highscore_table, g->s);
 			break;
 	}
 
@@ -125,14 +117,12 @@ void render(game *g)
 
 void cleanup(game *g)
 {
-	cleanup_stage(g->s);
-
+	if(g->s) {
+		cleanup_stage(g->s);
+	}
 	SDL_DestroyRenderer(g->renderer);
-	
 	SDL_DestroyWindow(g->window);
-
 	free(g);
-	
 	SDL_Quit();
 }
 

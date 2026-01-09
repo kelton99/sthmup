@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g -O0
+CFLAGS = -Wall -Wextra -g -O0 -std=c23
 SRC=src
 OBJ=obj
 SRCS=$(wildcard $(SRC)/*.c)
@@ -9,7 +9,7 @@ BIN = bin/shtmup
 
 all:$(BIN)
 
-release: CFLAGS=-Wall -O2 -DNDEBUG
+release: CFLAGS=-Wall -O2 -DNDEBUG -std=c23
 release: clean
 release: $(BIN)
 

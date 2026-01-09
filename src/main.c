@@ -9,7 +9,6 @@ int main(void)
 		render(g);
 		SDL_Delay(16);
 	}
-
 	cleanup(g);
 
 	return 0;

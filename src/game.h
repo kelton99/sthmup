@@ -4,22 +4,19 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "entity.h"
+#include "highscore.h"
 #include "stage.h"
 #include "star.h"
+#include "defs.h"
 
 #define MAX_KEYBOARD_KEYS 350
-
-enum STATE {
-	HIGHSCORE,
-	STAGE
-};
 
 typedef struct game {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	stage *s;
     star stars[MAX_STARS];
-	enum STATE state;
+	STATE state;
     highscore_table highscore_table;
 	int is_running;
 	int keyboard[MAX_KEYBOARD_KEYS];

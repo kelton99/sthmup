@@ -3,7 +3,9 @@
 #include "drawer.h"
 #include "defs.h"
 #include "entity_manager.h"
-#include "sounds.h"
+#include "highscore.h"
+#include <stdlib.h>
+#include <stddef.h>
 
 static void reset_stage(stage *s);
 
@@ -20,8 +22,6 @@ stage *init_stage()
 	s->spawn_timer = 0;
 	s->reset_timer = FPS * 3;
 	s->score = 0;
-	init_sounds();
-	play_music(true);
 	reset_stage(s);
 	return s;
 }
@@ -31,16 +31,14 @@ static void reset_stage(stage *s)
 	em_clean_entities(s->em);
 	gm_clean_gfx(s->gm);
 	em_init_player(s->em);
-	//init_starfield(s);
 
 	s->spawn_timer = 0;
 	s->reset_timer = FPS * 3;
 	s->score = 0;
 }
 
-void do_stage_logic(int *keyboard, stage *s)
+void do_stage_logic(int *keyboard, STATE *state, highscore_table *t, stage *s)
 {
-
 	em_do_player(s->em, keyboard);
 	em_do_fighters(s->em);
 	em_do_bullets(s->em, s->gm);
@@ -51,7 +49,10 @@ void do_stage_logic(int *keyboard, stage *s)
 	gm_do_debris(s->gm);
 
 	if(player == NULL && --s->reset_timer <= 0) {
-		reset_stage(s);
+		add_highscore(t, s->score);
+		cleanup_stage(s);
+		s = nullptr;
+		*state = HIGHSCORE;
 	}
 }
 
@@ -83,5 +84,6 @@ void cleanup_stage(stage *s)
 	em_clean_entities(s->em);
 	gm_clean_gfx(s->gm);
 	free(s->em);
+	free(s->gm);
 	free(s);
 }

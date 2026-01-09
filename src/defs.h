@@ -14,4 +14,9 @@
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
+typedef enum STATE {
+	HIGHSCORE,
+	STAGE
+} STATE;
+
 #endif

@@ -2,6 +2,7 @@
 #define __HIGHSCORE__
 
 #include <string.h>
+
 #define NUM_HIGHSCORES 8
 
 typedef struct {
@@ -13,6 +14,8 @@ typedef struct {
     highscore highscore[NUM_HIGHSCORES];
 } highscore_table;
 
-void do_highscore();
+void init_highscore_table(highscore_table *t);
+//void do_highscore(game *g);
+void add_highscore(highscore_table *table, int score);
 
 #endif
