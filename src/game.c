@@ -93,7 +93,7 @@ void update(game *g)
     	}  
 			break;
 		case STAGE:
-			do_stage_logic(g->keyboard, &g->state, &g->highscore_table, g->s);
+			do_stage_logic(g->keyboard, &g->state, &g->highscore_table, &g->s);
 			break;
 	}
 

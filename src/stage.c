@@ -12,7 +12,7 @@ static void reset_stage(stage *s);
 //DEFINING GLOBAL from GLOBALS.H
 int background_x;
 
-#define player s->em->player
+#define player em->player
 
 stage *init_stage()
 {
@@ -37,29 +37,29 @@ static void reset_stage(stage *s)
 	s->score = 0;
 }
 
-void do_stage_logic(int *keyboard, STATE *state, highscore_table *t, stage *s)
+void do_stage_logic(int *keyboard, STATE *state, highscore_table *t, stage **s)
 {
-	em_do_player(s->em, keyboard);
-	em_do_fighters(s->em);
-	em_do_bullets(s->em, s->gm);
-	em_do_score_pods(s->em, &s->score);
-	em_spawn_enemies(s->em, &s->spawn_timer);
-	em_clip_player(s->em);
-	gm_do_explosions(s->gm);
-	gm_do_debris(s->gm);
+	em_do_player((*s)->em, keyboard);
+	em_do_fighters((*s)->em);
+	em_do_bullets((*s)->em, (*s)->gm);
+	em_do_score_pods((*s)->em, &(*s)->score);
+	em_spawn_enemies((*s)->em, &(*s)->spawn_timer);
+	em_clip_player((*s)->em);
+	gm_do_explosions((*s)->gm);
+	gm_do_debris((*s)->gm);
 
-	if(player == NULL && --s->reset_timer <= 0) {
-		add_highscore(t, s->score);
-		cleanup_stage(s);
-		s = nullptr;
+	if((*s)->player == NULL && --(*s)->reset_timer <= 0) {
+		add_highscore(t, (*s)->score);
+		cleanup_stage(*s);
+		*s = nullptr;
 		*state = HIGHSCORE;
 	}
 }
 
 void draw_stage(stage *s, SDL_Renderer *r)
 {
-	if(player != NULL) {
-		blit(player->texture, player->position.x, player->position.y, r);
+	if(s->player != NULL) {
+		blit(s->player->texture, s->player->position.x, s->player->position.y, r);
 	}
 	
 	entity *b;
@@ -76,7 +76,7 @@ void draw_stage(stage *s, SDL_Renderer *r)
 
 	draw_debris(s->gm, r);
 	draw_explosions(s->gm, r);
-	draw_hud(s, player, r);
+	draw_hud(s, s->player, r);
 }
 
 void cleanup_stage(stage *s)

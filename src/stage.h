@@ -18,7 +18,7 @@ typedef struct stage {
 } stage;
 
 stage *init_stage();
-void do_stage_logic(int *keyboard, STATE *state, highscore_table *t, stage *s);
+void do_stage_logic(int *keyboard, STATE *state, highscore_table *t, stage **s);
 void draw_stage(stage *s, SDL_Renderer *r);
 void cleanup_stage(stage *s);
 #endif
