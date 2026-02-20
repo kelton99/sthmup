@@ -51,8 +51,9 @@ void do_stage_logic(int *keyboard, STATE *state, highscore_table *t, stage **s)
 	if((*s)->player == NULL && --(*s)->reset_timer <= 0) {
 		add_highscore(t, (*s)->score);
 		cleanup_stage(*s);
+		memset(keyboard, 0, sizeof(int) * MAX_KEYBOARD_KEYS);
 		*s = nullptr;
-		*state = HIGHSCORE;
+		*state = INPUT;
 	}
 }
 
@@ -61,7 +62,7 @@ void draw_stage(stage *s, SDL_Renderer *r)
 	if(s->player != NULL) {
 		blit(s->player->texture, s->player->position.x, s->player->position.y, r);
 	}
-	
+
 	entity *b;
 	list_for_each_entry(b, &s->em->bullets, list) {
 		blit(b->texture, b->position.x, b->position.y, r);

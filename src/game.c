@@ -1,19 +1,30 @@
 
+#include <SDL2/SDL_config_unix.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_scancode.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 #include "game.h"
+#include "defs.h"
 #include "drawer.h"
+#include "highscore.h"
 #include "sounds.h"
 #include "GLOBALS.h"
 
 #define CODE event->keysym.scancode
+
+highscore *new_highscore;
+int cursor_blink;
 
 static void do_background();
 static void do_starfield(game *g);
 static void init_starfield(game *g);
 static void doKeyDown(SDL_KeyboardEvent *event, game *g);
 static void doKeyUp(SDL_KeyboardEvent *event, game *g);
+static void do_name_input(game *g);
 
 game *init_game()
 {
@@ -39,7 +50,7 @@ game *init_game()
 		puts("Could not initialize Renderer");
 		exit(EXIT_FAILURE);
 	}
-	
+
     if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) == 1) {
         puts("Couldn't initialize SDL Mixer\n");
         exit(EXIT_FAILURE);
@@ -49,17 +60,19 @@ game *init_game()
 	g->state = HIGHSCORE;
 	init_highscore_table(&g->highscore_table);
 	init_starfield(g);
-	init_draw(g->renderer);	
+	init_draw(g->renderer);
 	init_sounds();
 	play_music(true);
 	IMG_Init(IMG_INIT_PNG);
 
+	cursor_blink = 0;
 	return g;
 }
 
 void handle_input(game *g)
 {
 	SDL_Event event;
+	memset(g->input_text, '\0', MAX_LINE_LENGHT);
 
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
@@ -71,7 +84,9 @@ void handle_input(game *g)
 				break;
 			case SDL_KEYUP:
 				doKeyUp(&event.key, g);
-			default:
+				break;
+			case SDL_TEXTINPUT:
+				STRNCPY(g->input_text, event.text.text, MAX_LINE_LENGHT);
 				break;
 		}
 	}
@@ -88,12 +103,15 @@ void update(game *g)
 	switch (g->state) {
 		case HIGHSCORE:
 			if (g->keyboard[SDL_SCANCODE_Z]) {
-        	g->s = init_stage();
-			g->state = STAGE;
-    	}  
+			    g->s = init_stage();
+				g->state = STAGE;
+    	    }
 			break;
 		case STAGE:
 			do_stage_logic(g->keyboard, &g->state, &g->highscore_table, &g->s);
+			break;
+		case INPUT:
+            do_name_input(g);
 			break;
 	}
 
@@ -111,7 +129,11 @@ void render(game *g)
 		case STAGE:
 			draw_stage(g->s, g->renderer);
 			break;
+		case INPUT:
+		    draw_name_input(g->renderer);
+			break;
 	}
+
 	SDL_RenderPresent(g->renderer);
 }
 
@@ -130,7 +152,7 @@ static void doKeyDown(SDL_KeyboardEvent *event, game *g)
 {
 	if (event->repeat == 0 && CODE < MAX_KEYBOARD_KEYS)
 		g->keyboard[CODE] = 1;
-	
+
 }
 static void doKeyUp(SDL_KeyboardEvent *event, game *g)
 {
@@ -163,4 +185,34 @@ static void do_starfield(game *g)
 			g->stars[i].x += SCREEN_WIDTH;
 		}
 	}
+}
+
+static void do_name_input(game *g)
+{
+    int name_lenght = strlen(new_highscore->name);
+
+    for (size_t i = 0; i < strlen(g->input_text); i++) {
+        char c = toupper(g->input_text[i]);
+        if (name_lenght < MAX_LINE_LENGHT - 1
+            && name_lenght >= ' ' && c <= 'Z') {
+                new_highscore->name[name_lenght++] = c;
+        }
+    }
+
+    if (name_lenght > 0 && g->keyboard[SDL_SCANCODE_BACKSPACE]) {
+        new_highscore->name[--name_lenght] = '\0';
+        g->keyboard[SDL_SCANCODE_BACKSPACE] = 0;
+    }
+
+    if(g->keyboard[SDL_SCANCODE_RETURN]) {
+        if(strlen(new_highscore->name) == 0) {
+            STRNCPY(new_highscore->name, "ANONYMOUS", MAX_LINE_LENGHT);
+        }
+        new_highscore = nullptr;
+        g->state = HIGHSCORE;
+    }
+
+    if (++cursor_blink >= FPS) {
+        cursor_blink = 0;
+    }
 }

@@ -8,6 +8,13 @@
 #include "stage.h"
 #include "star.h"
 
+typedef enum TEXT_ALIGNMENT {
+    TEXT_LEFT,
+    TEXT_CENTER,
+    TEXT_RIGHT,
+    ANY
+} TEXT_ALIGNMENT;
+
 void init_draw(SDL_Renderer *r);
 
 void draw_explosions(gfx_manager *gm, SDL_Renderer *r);
@@ -20,11 +27,13 @@ void draw_background(SDL_Renderer *r);
 
 void draw_starfield(star *stars, SDL_Renderer *r);
 
-void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *format, ...);
+void draw_text(int x, int y, int r, int g, int b, TEXT_ALIGNMENT align, SDL_Renderer *renderer, char *format, ...);
 
 void draw_hud(stage *s, entity *player, SDL_Renderer *renderer);
 
 void draw_highscore(highscore_table *table, SDL_Renderer *renderer);
+
+void draw_name_input(SDL_Renderer *renderer);
 
 void blit(SDL_Texture *texture, int x, int y, SDL_Renderer *r);
 

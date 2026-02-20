@@ -5,6 +5,9 @@
 #include "highscore.h"
 #include "star.h"
 #include "stage.h"
+#include <SDL2/SDL_rect.h>
+#include <SDL2/SDL_render.h>
+#include <wchar.h>
 
 #define MAX_LINE_LENGTH 1024
 #define GLYPH_HEIGHT 28
@@ -82,14 +85,14 @@ void draw_background(SDL_Renderer *r)
 void draw_starfield(star *stars, SDL_Renderer *r)
 {
 	for (int i = 0 ; i < MAX_STARS ; i++) {
-		int c = 32 * stars[i].speed;
+		const int c = 32 * stars[i].speed;
 		SDL_SetRenderDrawColor(r, c, c, c, 255);
-		
+
 		SDL_RenderDrawLine(r, stars[i].x, stars[i].y, stars[i].x + c / 10, stars[i].y);
 	}
 }
 
-void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *format, ...)
+void draw_text(int x, int y, int r, int g, int b, TEXT_ALIGNMENT align, SDL_Renderer *renderer, char *format, ...)
 {
 	va_list args;
 
@@ -99,7 +102,18 @@ void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *
 	vsprintf(draw_text_buffer, format, args);
 	va_end(args);
 
-	int len = strlen(draw_text_buffer);
+	const int len = strlen(draw_text_buffer);
+
+	switch (align) {
+		case TEXT_RIGHT:
+			x -= (len * GLYPH_WIDTH);
+			break;
+		case TEXT_CENTER:
+			x -= (len * GLYPH_WIDTH) / 2;
+			break;
+		default:
+			break;
+	}
 
 	SDL_Rect rect = {.w = GLYPH_WIDTH, .h = GLYPH_HEIGHT, .y = 0};
 
@@ -118,25 +132,44 @@ void draw_text(int x, int y, int r, int g, int b, SDL_Renderer *renderer, char *
 
 void draw_hud(stage *s, entity *player, SDL_Renderer *renderer)
 {
-	draw_text(1080, 10, 255, 255, 255, renderer, "SCORE: %03d", s->score);
+	draw_text(1080, 10, 255, 255, 255, TEXT_LEFT, renderer, "SCORE: %03d", s->score);
 	if(player != NULL) {
-		draw_text(1080, 50, 255, 255, 255, renderer, "HEALTH: %d", player->health);
+		draw_text(1080, 50, 255, 255, 255, TEXT_LEFT, renderer, "HEALTH: %d", player->health);
 	} else {
-		draw_text(1080, 50, 255, 255, 255, renderer, "HEALTH: %d", 0);
-		draw_text(400, 400, 255, 255, 255, renderer, "YOU GOT DESTROYED!");
+		draw_text(1080, 50, 255, 255, 255, TEXT_LEFT, renderer, "HEALTH: %d", 0);
+		draw_text(400, 400, 255, 255, 255, ANY, renderer, "YOU GOT DESTROYED!");
 	}
 }
 
 void draw_highscore(highscore_table *table, SDL_Renderer *renderer)
 {
-	draw_text(427, 70, 255, 255, 255, renderer, "Highscores");
-	for(int i = 0, y = 150; i < NUM_HIGHSCORES; i++) {
+	draw_text(427, 70, 255, 255, 255, ANY, renderer, "Highscores");
+	for(int i = 0, y = 150; i < NUM_HIGHSCORES; i++, y += 50) {
 		const int blue = table->highscore[i].recent ? 0: 255;
-		draw_text(425, y, 255, 255, blue, renderer, "#%d ............. %03d", (i + 1), table->highscore[i].score);
-		y += 50;
+		draw_text(425, y, 255, 255, blue, ANY, renderer, "#%d ............. %03d", (i + 1), table->highscore[i].score);
 	}
 
-	draw_text(425, 600, 255, 255, 255, renderer, "PRESS FIRE TO PLAY");
+	draw_text(425, 600, 255, 255, 255, ANY, renderer, "PRESS FIRE TO PLAY");
+}
+
+void draw_name_input(SDL_Renderer *renderer)
+{
+    draw_text(SCREEN_WIDTH / 2, 70, 255, 255, 255, TEXT_CENTER, renderer, "CONGRATULATIONS, YOU'VE ENTERED THE HIGHSCORE!");
+    draw_text(SCREEN_WIDTH / 2, 120, 255, 255, 255, TEXT_CENTER, renderer, "ENTER YOUR NAME BELOW:");
+    draw_text(SCREEN_WIDTH / 2, 250, 128, 255, 128, TEXT_CENTER, renderer, new_highscore->name);
+
+    if(cursor_blink < FPS / 2) {
+        SDL_Rect r = {
+            .x = ((SCREEN_WIDTH / 2) + (strlen(new_highscore->name) * GLYPH_WIDTH) / 2) + 5,
+            .y = 250,
+            .w = GLYPH_WIDTH,
+            .h = GLYPH_HEIGHT
+        };
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+        SDL_RenderFillRect(renderer, &r);
+    }
+
+    draw_text(SCREEN_WIDTH / 2, 625, 255, 255, 255, TEXT_CENTER, renderer, "PRESS RETURN WHEN FINISHED");
 }
 
 void blit(SDL_Texture *texture, int x, int y, SDL_Renderer *r)

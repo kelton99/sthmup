@@ -1,3 +1,4 @@
+
 #ifndef __GAME__
 #define __GAME__
 
@@ -9,8 +10,6 @@
 #include "star.h"
 #include "defs.h"
 
-#define MAX_KEYBOARD_KEYS 350
-
 typedef struct game {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
@@ -20,6 +19,7 @@ typedef struct game {
     highscore_table highscore_table;
 	int is_running;
 	int keyboard[MAX_KEYBOARD_KEYS];
+	char input_text[MAX_LINE_LENGHT];
 } game;
 
 game *init_game();
