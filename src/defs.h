@@ -1,3 +1,4 @@
+
 #ifndef __DEFS__
 #define __DEFS__
 
@@ -16,7 +17,8 @@
 #define SCORE_POD_SPEED 5
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
-#define MAX_LINE_LENGHT 16
+#define MAX_LINE_LENGHT 1024
+#define MAX_SCORE_NAME_LENGTH 32
 
 typedef enum STATE {
 	HIGHSCORE,

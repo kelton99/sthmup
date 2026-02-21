@@ -17,7 +17,8 @@ void init_highscore_table(highscore_table *t)
 	memset(t, 0, sizeof(highscore_table));
 	for(int i = 0; i < NUM_HIGHSCORES; i++) {
 		t->highscore[i].score = 0;
-        STRNCPY(t->highscore[i].name, "..........", NUM_HIGHSCORES);
+        strncpy(t->highscore[i].name, "ANONYMOUS", MAX_SCORE_NAME_LENGTH);
+        t->highscore[i].name[MAX_SCORE_NAME_LENGTH - 1] = '\0';
 	}
 	new_highscore = nullptr;
     //cursor_blink = 0;

@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang
 CFLAGS = -Wall -Wextra -g -O0 -std=c23
 SRC=src
 OBJ=obj

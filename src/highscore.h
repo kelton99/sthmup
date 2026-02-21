@@ -1,3 +1,4 @@
+
 #ifndef __HIGHSCORE__
 #define __HIGHSCORE__
 
@@ -7,7 +8,7 @@
 #define NUM_HIGHSCORES 8
 
 typedef struct {
-    char name[MAX_LINE_LENGHT];
+    char name[MAX_SCORE_NAME_LENGTH];
     int recent;
     int score;
 } highscore;

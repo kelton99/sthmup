@@ -74,7 +74,7 @@ void handle_input(game *g)
 	SDL_Event event;
 	memset(g->input_text, '\0', MAX_LINE_LENGHT);
 
-	while (SDL_PollEvent(&event)) {
+	while (SDL_PollEvent(&event) != 0) {
 		switch (event.type) {
 			case SDL_QUIT:
 				g->is_running = 0;
@@ -86,8 +86,11 @@ void handle_input(game *g)
 				doKeyUp(&event.key, g);
 				break;
 			case SDL_TEXTINPUT:
-				STRNCPY(g->input_text, event.text.text, MAX_LINE_LENGHT);
+				strncpy(g->input_text, event.text.text, MAX_LINE_LENGHT);
+				g->input_text[MAX_LINE_LENGHT - 1] = '\0';
 				break;
+			default:
+			    break;
 		}
 	}
 }
@@ -190,10 +193,10 @@ static void do_starfield(game *g)
 static void do_name_input(game *g)
 {
     int name_lenght = strlen(new_highscore->name);
-
-    for (size_t i = 0; i < strlen(g->input_text); i++) {
+    printf("%s", g->input_text);
+    for (size_t i = 0; i < strlen(g->input_text); ++i) {
         char c = toupper(g->input_text[i]);
-        if (name_lenght < MAX_LINE_LENGHT - 1
+        if (name_lenght < MAX_SCORE_NAME_LENGTH - 1
             && name_lenght >= ' ' && c <= 'Z') {
                 new_highscore->name[name_lenght++] = c;
         }
@@ -206,7 +209,8 @@ static void do_name_input(game *g)
 
     if(g->keyboard[SDL_SCANCODE_RETURN]) {
         if(strlen(new_highscore->name) == 0) {
-            STRNCPY(new_highscore->name, "ANONYMOUS", MAX_LINE_LENGHT);
+            strncpy(new_highscore->name, "ANONYMOUS", MAX_SCORE_NAME_LENGTH);
+            new_highscore->name[MAX_SCORE_NAME_LENGTH - 1] = '\0';
         }
         new_highscore = nullptr;
         g->state = HIGHSCORE;

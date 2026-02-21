@@ -4,6 +4,7 @@
 #include "defs.h"
 #include "entity_manager.h"
 #include "highscore.h"
+#include <SDL2/SDL_keyboard.h>
 #include <stdlib.h>
 #include <stddef.h>
 
