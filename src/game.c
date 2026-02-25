@@ -1,5 +1,4 @@
 
-#include <SDL2/SDL_config_unix.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_scancode.h>
