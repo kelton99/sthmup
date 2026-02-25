@@ -146,10 +146,7 @@ void draw_highscore(highscore_table *table, SDL_Renderer *renderer)
 	draw_text(427, 70, 255, 255, 255, ANY, renderer, "HIGHSCORES");
 	for(int i = 0, y = 150; i < NUM_HIGHSCORES; i++, y += 50) {
 		const int blue = table->highscore[i].recent ? 0: 255;
-		draw_text(425, y, 255, 255, blue, ANY, renderer, "#%-2d. %s - %03d", (i + 1), table->highscore[i].name, table->highscore[i].score);
-
-		//drawText(SCREEN_WIDTH / 2, currHeight, r, g, b, TEXT_CENTER, "#%-2d. %-31s ............. %03d",
-			//(i + 1), highscoreTable.highscore[i].nameArray, highscoreTable.highscore[i].score);
+		draw_text(425, y, 255, 255, blue, ANY, renderer, "#%d. %-13s %03d", (i + 1), table->highscore[i].name, table->highscore[i].score);
 	}
 
 	draw_text(425, 600, 255, 255, 255, ANY, renderer, "PRESS FIRE TO PLAY");

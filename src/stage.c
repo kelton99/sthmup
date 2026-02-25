@@ -50,11 +50,15 @@ void do_stage_logic(int *keyboard, STATE *state, highscore_table *t, stage **s)
 	gm_do_debris((*s)->gm);
 
 	if((*s)->player == NULL && --(*s)->reset_timer <= 0) {
-		add_highscore(t, (*s)->score);
+	    if((*s)->score > 0) {
+			add_highscore(t, (*s)->score);
+			*state = INPUT;
+		} else {
+		    *state = HIGHSCORE;
+		}
 		cleanup_stage(*s);
 		memset(keyboard, 0, sizeof(int) * MAX_KEYBOARD_KEYS);
 		*s = nullptr;
-		*state = INPUT;
 	}
 }
 

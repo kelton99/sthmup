@@ -7,7 +7,7 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #define STRNCPY(dest, src, n) strncpy(dest, src, n); dest[n - 1] = '\0'
-#define MAX_KEYBOARD_KEYS 350
+#define MAX_KEYBOARD_KEYS 104
 #define FPS 60
 #define SIDE_PLAYER 0
 #define SIDE_ALIEN 1
@@ -17,8 +17,8 @@
 #define SCORE_POD_SPEED 5
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
-#define MAX_LINE_LENGHT 1024
-#define MAX_SCORE_NAME_LENGTH 32
+#define MAX_LINE_LENGHT 2
+#define MAX_SCORE_NAME_LENGTH 12
 
 typedef enum STATE {
 	HIGHSCORE,

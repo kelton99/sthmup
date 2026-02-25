@@ -4,6 +4,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_scancode.h>
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -16,8 +17,8 @@
 
 #define CODE event->keysym.scancode
 
-highscore *new_highscore;
-int cursor_blink;
+highscore *new_highscore = nullptr;
+int cursor_blink = 0;
 
 static void do_background();
 static void do_starfield(game *g);
@@ -64,15 +65,13 @@ game *init_game()
 	init_sounds();
 	play_music(true);
 	IMG_Init(IMG_INIT_PNG);
-
-	cursor_blink = 0;
 	return g;
 }
 
 void handle_input(game *g)
 {
 	SDL_Event event;
-	memset(g->input_text, '\0', MAX_LINE_LENGHT);
+	memset(g->input_text_buffer, '\0', MAX_LINE_LENGHT);
 
 	while (SDL_PollEvent(&event) != 0) {
 		switch (event.type) {
@@ -86,8 +85,7 @@ void handle_input(game *g)
 				doKeyUp(&event.key, g);
 				break;
 			case SDL_TEXTINPUT:
-				strncpy(g->input_text, event.text.text, MAX_LINE_LENGHT);
-				g->input_text[MAX_LINE_LENGHT - 1] = '\0';
+				strncat(g->input_text_buffer, event.text.text, MAX_LINE_LENGHT);
 				break;
 			default:
 			    break;
@@ -97,9 +95,6 @@ void handle_input(game *g)
 
 void update(game *g)
 {
-	if(g->keyboard[SDL_SCANCODE_Q]) {
-		g->is_running = 0;
-	}
 	do_background();
 	do_starfield(g);
 
@@ -109,9 +104,15 @@ void update(game *g)
 			    g->s = init_stage();
 				g->state = STAGE;
     	    }
+			if(g->keyboard[SDL_SCANCODE_Q]) {
+				g->is_running = 0;
+			}
 			break;
 		case STAGE:
 			do_stage_logic(g->keyboard, &g->state, &g->highscore_table, &g->s);
+			if(g->keyboard[SDL_SCANCODE_Q]) {
+				g->is_running = 0;
+			}
 			break;
 		case INPUT:
             do_name_input(g);
@@ -192,13 +193,16 @@ static void do_starfield(game *g)
 
 static void do_name_input(game *g)
 {
+    system("clear");
     int name_lenght = strlen(new_highscore->name);
-    printf("%s", g->input_text);
-    for (size_t i = 0; i < strlen(g->input_text); ++i) {
-        char c = toupper(g->input_text[i]);
-        if (name_lenght < MAX_SCORE_NAME_LENGTH - 1
-            && name_lenght >= ' ' && c <= 'Z') {
-                new_highscore->name[name_lenght++] = c;
+    printf("input text: %s\n", g->input_text_buffer);
+    printf("highscore name: %s\n", new_highscore->name);
+    printf("name lenght: %d\n", name_lenght);
+    printf("int lenght: %lu\n", strlen(g->input_text_buffer));
+    if(g->input_text_buffer[0] != '\0') {
+        char c = toupper(g->input_text_buffer[0]);
+        if (name_lenght < MAX_SCORE_NAME_LENGTH - 1 && c >= ' ' && c <= 'Z') {
+            strncat(new_highscore->name, &c, MAX_SCORE_NAME_LENGTH);
         }
     }
 
