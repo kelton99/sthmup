@@ -192,12 +192,7 @@ static void do_starfield(game *g)
 
 static void do_name_input(game *g)
 {
-    system("clear");
     int name_lenght = strlen(new_highscore->name);
-    printf("input text: %s\n", g->input_text_buffer);
-    printf("highscore name: %s\n", new_highscore->name);
-    printf("name lenght: %d\n", name_lenght);
-    printf("int lenght: %lu\n", strlen(g->input_text_buffer));
     if(g->input_text_buffer[0] != '\0') {
         char c = toupper(g->input_text_buffer[0]);
         if (name_lenght < MAX_SCORE_NAME_LENGTH - 1 && c >= ' ' && c <= 'Z') {
