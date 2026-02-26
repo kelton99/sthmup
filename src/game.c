@@ -153,14 +153,15 @@ void cleanup(game *g)
 
 static void doKeyDown(SDL_KeyboardEvent *event, game *g)
 {
-	if (event->repeat == 0 && CODE < MAX_KEYBOARD_KEYS)
+	if (event->repeat == 0 && CODE < MAX_KEYBOARD_KEYS) {
 		g->keyboard[CODE] = 1;
-
+	}
 }
 static void doKeyUp(SDL_KeyboardEvent *event, game *g)
 {
-	if (event->repeat == 0 && CODE < MAX_KEYBOARD_KEYS)
+	if (event->repeat == 0 && CODE < MAX_KEYBOARD_KEYS) {
 		g->keyboard[CODE] = 0;
+	}
 }
 
 static void init_starfield(game *g)
